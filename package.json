@@ -1,4 +1,8 @@
 {
+  "name": "minifactorygame",
+  "version": "0.0.1",
+  "author": "Alexandru Damian <alexdamian121@gmail.com>",
+
   "dependencies": {
     "babylonjs": "^5.47.0",
     "typescript": "^4.9.5"
