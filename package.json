@@ -18,6 +18,8 @@
   },
   "homepage": "https://github.com/alexandru-damian/MiniFactoryGame#readme",
   "devDependencies": {
+    "@babylonjs/core": "^5.47.1",
+    "@babylonjs/materials": "^5.47.1",
     "esbuild": "^0.17.10",
     "jest": "^29.4.3"
   },

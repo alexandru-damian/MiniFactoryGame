@@ -1,9 +1,17 @@
-import Scene from './scene';
+import Playground from './scene';
+
+import {Engine} from '@babylonjs/core/Engines/engine';
+import {Scene} from '@babylonjs/core/scene';
 
 window.addEventListener ('DOMContentLoaded', ()=>
 {
-    let game = new Scene("canvas");
+    let canvas = document.getElementById("canvas") as HTMLCanvasElement;
+    let engine = new Engine(canvas);
 
-    game.createScene();
-    game.render();
+    let scene = Playground.CreateScene(engine, canvas);
+
+    engine.runRenderLoop(()=>
+    {
+        scene.render();
+    })
 })
