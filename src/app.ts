@@ -1,7 +1,6 @@
 import Playground from './scene';
 
 import {Engine} from '@babylonjs/core/Engines/engine';
-import {Scene} from '@babylonjs/core/scene';
 
 window.addEventListener ('DOMContentLoaded', ()=>
 {
@@ -13,5 +12,10 @@ window.addEventListener ('DOMContentLoaded', ()=>
     engine.runRenderLoop(()=>
     {
         scene.render();
+    })
+
+    window.addEventListener("resize", ()=>
+    {
+        engine.resize();
     })
 })
