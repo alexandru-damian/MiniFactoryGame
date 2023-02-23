@@ -15,13 +15,13 @@ The applications requires the following:
 
 ## How to run
 
-On the root folder of your workspace install all the node dependencies that the project requires.
+On the root folder of your workspace, install all the node dependencies that the project requires.
 
 ```
 npm install
 ```
 
-Once the pacakges have been installed run the followin command:
+Once the pacakges have been installed run the following command:
 
 ```
 npm run build
