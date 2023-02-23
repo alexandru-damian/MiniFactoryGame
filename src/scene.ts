@@ -89,6 +89,9 @@ export default class Playground {
 
     let previousPosition;
 
+    let previousY = this.groundHeight;
+    let currentY = this.groundHeight;
+
     let getGroundPosition = () => {
       // Use a predicate to get position on the ground
       let pickinfo = scene.pick(
@@ -148,8 +151,13 @@ export default class Playground {
 
       console.log(currentMesh.position.y);
 
-      if (evt.ctrlKey) {
-          currentMesh.position.y -= evt.movementY/this.decelarationDeltaY;
+      if(evt.ctrlKey) {
+        previousY = (currentY!=currentMesh.position.y)?currentY:currentMesh.position.y;
+        currentY = currentY - evt.movementY / this.decelarationDeltaY;    
+        if (Math.abs(currentY - previousY) > 0) {
+          currentMesh.position.y = this.snap(currentY, currentMesh.scaling.y) + currentMesh.scaling.y/2;
+        }
+
         return;
       }
 
