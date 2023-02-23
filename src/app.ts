@@ -7,7 +7,8 @@ window.addEventListener ('DOMContentLoaded', ()=>
     let canvas = document.getElementById("canvas") as HTMLCanvasElement;
     let engine = new Engine(canvas);
 
-    let scene = Playground.CreateScene(engine, canvas);
+    let pg = new Playground();
+    let scene = pg.createScene(engine, canvas);
 
     engine.runRenderLoop(()=>
     {
