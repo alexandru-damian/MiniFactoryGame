@@ -1,27 +1,61 @@
 import * as BABYLON from "@babylonjs/core";
 import { GridMaterial } from "@babylonjs/materials/grid/gridMaterial";
+import { posix } from "path";
 
 export default class Playground {
-  private readonly defaultY = 0.5;
   private readonly boxSize = 1;
 
-  private createCube(): BABYLON.Mesh {
+  private readonly spaceBoxSize = 30;
+  private readonly groundHeight = (this.boxSize+0.01) / 2;
+
+  private readonly poleSize = this.boxSize/4;
+  private readonly heightPole = this.spaceBoxSize/2;
+  private readonly defaultPolePosition = new BABYLON.Vector3(1000, this.heightPole/2, 0);
+
+  private createCube(color:string, pos:BABYLON.Vector3): BABYLON.Mesh {
     const box = BABYLON.MeshBuilder.CreateBox("box", {});
 
-    box.position.y = this.defaultY;
     box.scaling = new BABYLON.Vector3(this.boxSize, this.boxSize, this.boxSize);
 
     box.edgesWidth = 1;
     box.edgesColor = new BABYLON.Color4(1, 1, 1, 1);
+    box.position = pos;
 
-    box.position.y = this.boxSize / 2;
+    box.position.y = this.groundHeight;
 
     const boxMat = new BABYLON.StandardMaterial("boxMat");
-    boxMat.diffuseColor = new BABYLON.Color3(0.09, 0.21, 0.62);
+    boxMat.diffuseColor = BABYLON.Color3.FromHexString(color);
 
     box.material = boxMat;
 
     return box;
+  }
+
+  private createPole(): BABYLON.Mesh
+  {
+    const pole = BABYLON.CreateBox("pole",{});
+    pole.scaling = new BABYLON.Vector3(this.poleSize, this.heightPole, this.poleSize);
+    pole.position = this.defaultPolePosition.clone();
+    pole.visibility = 0;
+
+    return pole;
+  }
+
+  private createPlane(): BABYLON.Mesh
+  {
+    const ground = BABYLON.MeshBuilder.CreateGround(
+        "ground",
+        { width: this.spaceBoxSize,height: this.spaceBoxSize}
+      );
+
+    const grid = new GridMaterial("groundMaterial");
+    ground.material = grid;
+    grid.mainColor = new BABYLON.Color3(0.09, 0.21, 0.62);
+
+    ground.position.x += this.boxSize/2;
+    ground.position.z += this.boxSize/2;
+
+    return ground;
   }
 
   public createScene(
@@ -46,30 +80,22 @@ export default class Playground {
 
     light.intensity = 1;
 
-    const ground = BABYLON.MeshBuilder.CreateGround(
-      "ground",
-      { width: 30, height: 30 },
-      scene
-    );
-
     scene.hoverCursor = "default";
 
-    const grid = new GridMaterial("groundMaterial", scene);
-    ground.material = grid;
-    grid.mainColor = new BABYLON.Color3(0.09, 0.21, 0.62);
-
-    let cube = this.createCube();
+    let cube = this.createCube("#4A6DE5", new BABYLON.Vector3());
+    let cube1 = this.createCube("#4912E5",new BABYLON.Vector3(3,1,4));
+    let cube2 = this.createCube("#43D100",new BABYLON.Vector3(2,1,6));
     cube.actionManager = new BABYLON.ActionManager(scene);
 
+    let ground = this.createPlane();
     let currentMesh: BABYLON.Nullable<BABYLON.AbstractMesh>;
+    let currentMeshPole = this.createPole();
 
-
-    const hl = new BABYLON.HighlightLayer("hl", scene);
     let previousPosition;
 
-    var getGroundPosition = function () {
+    let getGroundPosition = ()=> {
       // Use a predicate to get position on the ground
-      var pickinfo = scene.pick(
+      let pickinfo = scene.pick(
         scene.pointerX,
         scene.pointerY,
         function (mesh) {
@@ -84,10 +110,19 @@ export default class Playground {
     };
 
     scene.onPointerUp = () => {
+      if(!currentMesh)
+      {
+        return;
+      }
+
       if (previousPosition) {
         camera.attachControl();
         previousPosition = null;
+
+        currentMeshPole.position.x = currentMesh?.position.x;
+        currentMeshPole.position.z = currentMesh?.position.z;
         currentMesh?.disableEdgesRendering();
+        currentMesh = null;
       }
     };
 
@@ -103,29 +138,43 @@ export default class Playground {
         }
 
         currentMesh?.enableEdgesRendering();
-        previousPosition = getGroundPosition();
+        previousPosition = currentMesh.position;
+
+        currentMeshPole.position.x = currentMesh.position.x;
+      currentMeshPole.position.z = currentMesh.position.z;
 
         camera.detachControl();
       }
     };
 
-    scene.onPointerMove = () => {
+    scene.onPointerMove = (evt) => {
       if (!previousPosition) {
+        return;
+      }
+
+      if(!currentMesh)
+      {
+        return;
+      }
+
+      if(evt.ctrlKey)
+      {
+        currentMesh.position.y -= evt.movementY/50;
         return;
       }
 
       let current = getGroundPosition();
 
-      if (!current || !currentMesh) {
+      if (!current) {
         return;
       }
 
-      let diff = current.subtract(previousPosition) as BABYLON.Vector3;
+         currentMesh.enableEdgesRendering();
+         currentMesh.position.x = current.x;
+         currentMesh.position.z = current.z;
 
-      currentMesh.enableEdgesRendering();
-      currentMesh.position.addInPlace(diff);
-
-      previousPosition = current;
+         currentMeshPole.position.x = currentMesh.position.x;
+      currentMeshPole.position.z = currentMesh.position.z;
     };
 
     return scene;
