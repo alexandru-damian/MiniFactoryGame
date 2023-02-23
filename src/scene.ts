@@ -8,10 +8,6 @@ export default class Playground {
   private readonly spaceBoxSize = 30;
   private readonly groundHeight = (this.boxSize+0.01) / 2;
 
-  private readonly poleSize = this.boxSize/4;
-  private readonly heightPole = this.spaceBoxSize/2;
-  private readonly defaultPolePosition = new BABYLON.Vector3(1000, this.heightPole/2, 0);
-
   private createCube(color:string, pos:BABYLON.Vector3): BABYLON.Mesh {
     const box = BABYLON.MeshBuilder.CreateBox("box", {});
 
@@ -29,16 +25,6 @@ export default class Playground {
     box.material = boxMat;
 
     return box;
-  }
-
-  private createPole(): BABYLON.Mesh
-  {
-    const pole = BABYLON.CreateBox("pole",{});
-    pole.scaling = new BABYLON.Vector3(this.poleSize, this.heightPole, this.poleSize);
-    pole.position = this.defaultPolePosition.clone();
-    pole.visibility = 0;
-
-    return pole;
   }
 
   private createPlane(): BABYLON.Mesh
@@ -89,7 +75,6 @@ export default class Playground {
 
     let ground = this.createPlane();
     let currentMesh: BABYLON.Nullable<BABYLON.AbstractMesh>;
-    let currentMeshPole = this.createPole();
 
     let previousPosition;
 
@@ -119,8 +104,6 @@ export default class Playground {
         camera.attachControl();
         previousPosition = null;
 
-        currentMeshPole.position.x = currentMesh?.position.x;
-        currentMeshPole.position.z = currentMesh?.position.z;
         currentMesh?.disableEdgesRendering();
         currentMesh = null;
       }
@@ -139,9 +122,6 @@ export default class Playground {
 
         currentMesh?.enableEdgesRendering();
         previousPosition = currentMesh.position;
-
-        currentMeshPole.position.x = currentMesh.position.x;
-      currentMeshPole.position.z = currentMesh.position.z;
 
         camera.detachControl();
       }
@@ -172,9 +152,6 @@ export default class Playground {
          currentMesh.enableEdgesRendering();
          currentMesh.position.x = current.x;
          currentMesh.position.z = current.z;
-
-         currentMeshPole.position.x = currentMesh.position.x;
-      currentMeshPole.position.z = currentMesh.position.z;
     };
 
     return scene;
