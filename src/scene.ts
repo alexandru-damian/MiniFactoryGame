@@ -6,11 +6,11 @@ export default class Playground {
   private readonly boxSize = 1;
 
   private readonly spaceBoxSize = 30;
-  private readonly groundHeight = (this.boxSize+0.01) / 2;
+  private readonly groundHeight = (this.boxSize + 0.01) / 2;
 
   private readonly decelarationDeltaY = 32;
 
-  private createCube(color:string, pos:BABYLON.Vector3): BABYLON.Mesh {
+  private createCube(color: string, pos: BABYLON.Vector3): BABYLON.Mesh {
     const box = BABYLON.MeshBuilder.CreateBox("box", {});
 
     box.scaling = new BABYLON.Vector3(this.boxSize, this.boxSize, this.boxSize);
@@ -29,21 +29,30 @@ export default class Playground {
     return box;
   }
 
-  private createPlane(): BABYLON.Mesh
-  {
-    const ground = BABYLON.MeshBuilder.CreateGround(
-        "ground",
-        { width: this.spaceBoxSize,height: this.spaceBoxSize}
-      );
+  private createPlane(): BABYLON.Mesh {
+    const ground = BABYLON.MeshBuilder.CreateGround("ground", {
+      width: this.spaceBoxSize,
+      height: this.spaceBoxSize,
+    });
 
     const grid = new GridMaterial("groundMaterial");
     ground.material = grid;
     grid.mainColor = new BABYLON.Color3(0.09, 0.21, 0.62);
 
-    ground.position.x += this.boxSize/2;
-    ground.position.z += this.boxSize/2;
+    ground.position.x += this.boxSize / 2;
+    ground.position.z += this.boxSize / 2;
 
     return ground;
+  }
+
+  private snap(x: number, referenceSize: number) {
+    let res = x % referenceSize;
+    let isCloser = false;
+    if (Math.abs(res) == 0) {
+      isCloser = true;
+    }
+
+    return isCloser ? Math.floor(x + res) : Math.ceil(x + res);
   }
 
   public createScene(
@@ -71,8 +80,8 @@ export default class Playground {
     scene.hoverCursor = "default";
 
     let cube = this.createCube("#4A6DE5", new BABYLON.Vector3());
-    let cube1 = this.createCube("#4912E5",new BABYLON.Vector3(3,1,4));
-    let cube2 = this.createCube("#43D100",new BABYLON.Vector3(2,1,6));
+    let cube1 = this.createCube("#4912E5", new BABYLON.Vector3(3, 1, 4));
+    let cube2 = this.createCube("#43D100", new BABYLON.Vector3(2, 1, 6));
     cube.actionManager = new BABYLON.ActionManager(scene);
 
     let ground = this.createPlane();
@@ -80,7 +89,10 @@ export default class Playground {
 
     let previousPosition;
 
-    let getGroundPosition = ()=> {
+    let previousY = this.groundHeight;
+    let currentY = this.groundHeight;
+
+    let getGroundPosition = () => {
       // Use a predicate to get position on the ground
       let pickinfo = scene.pick(
         scene.pointerX,
@@ -97,8 +109,7 @@ export default class Playground {
     };
 
     scene.onPointerUp = () => {
-      if(!currentMesh)
-      {
+      if (!currentMesh) {
         return;
       }
 
@@ -134,14 +145,19 @@ export default class Playground {
         return;
       }
 
-      if(!currentMesh)
-      {
+      if (!currentMesh) {
         return;
       }
 
-      if(evt.ctrlKey)
-      {
-        currentMesh.position.y -= evt.movementY/this.decelarationDeltaY;
+      console.log(currentMesh.position.y);
+
+      if(evt.ctrlKey) {
+        previousY = (currentY!=currentMesh.position.y)?currentY:currentMesh.position.y;
+        currentY = currentY - evt.movementY / this.decelarationDeltaY;    
+        if (Math.abs(currentY - previousY) > 0) {
+          currentMesh.position.y = this.snap(currentY, currentMesh.scaling.y) + currentMesh.scaling.y/2;
+        }
+
         return;
       }
 
@@ -151,9 +167,10 @@ export default class Playground {
         return;
       }
 
-         currentMesh.enableEdgesRendering();
-         currentMesh.position.x = current.x;
-         currentMesh.position.z = current.z;
+      currentMesh.enableEdgesRendering();
+
+      currentMesh.position.x = this.snap(current.x, currentMesh.scaling.y);
+      currentMesh.position.z = this.snap(current.z, currentMesh.scaling.y);
     };
 
     return scene;
