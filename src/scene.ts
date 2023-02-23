@@ -1,34 +1,161 @@
-import * as BABYLON from '@babylonjs/core';
+import * as BABYLON from "@babylonjs/core";
+import { GridMaterial } from "@babylonjs/materials/grid/gridMaterial";
+import { posix } from "path";
 
 export default class Playground {
-    public static CreateScene(engine: BABYLON.Engine, canvas: HTMLCanvasElement): BABYLON.Scene {
-        // This creates a basic Babylon Scene object (non-mesh)
-        var scene = new BABYLON.Scene(engine);
+  private readonly boxSize = 1;
 
-        // This creates and positions a free camera (non-mesh)
-        var camera = new BABYLON.FreeCamera("camera1", new BABYLON.Vector3(0, 5, -10), scene);
+  private readonly spaceBoxSize = 30;
+  private readonly groundHeight = (this.boxSize+0.01) / 2;
 
-        // This targets the camera to scene origin
-        camera.setTarget(BABYLON.Vector3.Zero());
+  private readonly decelarationDeltaY = 32;
 
-        // This attaches the camera to the canvas
-        camera.attachControl(canvas, true);
+  private createCube(color:string, pos:BABYLON.Vector3): BABYLON.Mesh {
+    const box = BABYLON.MeshBuilder.CreateBox("box", {});
 
-        // This creates a light, aiming 0,1,0 - to the sky (non-mesh)
-        var light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0), scene);
+    box.scaling = new BABYLON.Vector3(this.boxSize, this.boxSize, this.boxSize);
 
-        // Default intensity is 1. Let's dim the light a small amount
-        light.intensity = 0.7;
+    box.edgesWidth = 1;
+    box.edgesColor = new BABYLON.Color4(1, 1, 1, 1);
+    box.position = pos;
 
-        // Our built-in 'sphere' shape. Params: name, options, scene
-        var sphere = BABYLON.MeshBuilder.CreateSphere("sphere", {diameter: 2, segments: 32}, scene);
+    box.position.y = this.groundHeight;
 
-        // Move the sphere upward 1/2 its height
-        sphere.position.y = 1;
+    const boxMat = new BABYLON.StandardMaterial("boxMat");
+    boxMat.diffuseColor = BABYLON.Color3.FromHexString(color);
 
-        // Our built-in 'ground' shape. Params: name, options, scene
-        var ground = BABYLON.MeshBuilder.CreateGround("ground", {width: 6, height: 6}, scene);
+    box.material = boxMat;
 
-        return scene;
-    }
+    return box;
+  }
+
+  private createPlane(): BABYLON.Mesh
+  {
+    const ground = BABYLON.MeshBuilder.CreateGround(
+        "ground",
+        { width: this.spaceBoxSize,height: this.spaceBoxSize}
+      );
+
+    const grid = new GridMaterial("groundMaterial");
+    ground.material = grid;
+    grid.mainColor = new BABYLON.Color3(0.09, 0.21, 0.62);
+
+    ground.position.x += this.boxSize/2;
+    ground.position.z += this.boxSize/2;
+
+    return ground;
+  }
+
+  public createScene(
+    engine: BABYLON.Engine,
+    canvas: HTMLCanvasElement
+  ): BABYLON.Scene {
+    // This creates a basic Babylon Scene object (non-mesh)
+    var scene = new BABYLON.Scene(engine);
+    const camera = new BABYLON.ArcRotateCamera(
+      "camera",
+      -Math.PI / 2,
+      Math.PI / 2.5,
+      15,
+      new BABYLON.Vector3(0, 0, 0)
+    );
+    camera.attachControl(canvas, true);
+    const light = new BABYLON.HemisphericLight(
+      "light",
+      new BABYLON.Vector3(1, 1, 0),
+      scene
+    );
+
+    light.intensity = 1;
+
+    scene.hoverCursor = "default";
+
+    let cube = this.createCube("#4A6DE5", new BABYLON.Vector3());
+    let cube1 = this.createCube("#4912E5",new BABYLON.Vector3(3,1,4));
+    let cube2 = this.createCube("#43D100",new BABYLON.Vector3(2,1,6));
+    cube.actionManager = new BABYLON.ActionManager(scene);
+
+    let ground = this.createPlane();
+    let currentMesh: BABYLON.Nullable<BABYLON.AbstractMesh>;
+
+    let previousPosition;
+
+    let getGroundPosition = ()=> {
+      // Use a predicate to get position on the ground
+      let pickinfo = scene.pick(
+        scene.pointerX,
+        scene.pointerY,
+        function (mesh) {
+          return mesh == ground;
+        }
+      );
+      if (pickinfo.hit) {
+        return pickinfo.pickedPoint;
+      }
+
+      return null;
+    };
+
+    scene.onPointerUp = () => {
+      if(!currentMesh)
+      {
+        return;
+      }
+
+      if (previousPosition) {
+        camera.attachControl();
+        previousPosition = null;
+
+        currentMesh?.disableEdgesRendering();
+        currentMesh = null;
+      }
+    };
+
+    scene.onPointerDown = (evt, pickResult) => {
+      if (evt.button !== 0) {
+        return;
+      }
+
+      if (pickResult.hit) {
+        currentMesh = pickResult.pickedMesh;
+        if (currentMesh == ground || !currentMesh) {
+          return;
+        }
+
+        currentMesh?.enableEdgesRendering();
+        previousPosition = currentMesh.position;
+
+        camera.detachControl();
+      }
+    };
+
+    scene.onPointerMove = (evt) => {
+      if (!previousPosition) {
+        return;
+      }
+
+      if(!currentMesh)
+      {
+        return;
+      }
+
+      if(evt.ctrlKey)
+      {
+        currentMesh.position.y -= evt.movementY/this.decelarationDeltaY;
+        return;
+      }
+
+      let current = getGroundPosition();
+
+      if (!current) {
+        return;
+      }
+
+         currentMesh.enableEdgesRendering();
+         currentMesh.position.x = current.x;
+         currentMesh.position.z = current.z;
+    };
+
+    return scene;
+  }
 }
