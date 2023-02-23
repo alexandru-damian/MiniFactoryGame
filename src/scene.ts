@@ -8,6 +8,8 @@ export default class Playground {
   private readonly spaceBoxSize = 30;
   private readonly groundHeight = (this.boxSize+0.01) / 2;
 
+  private readonly decelarationDeltaY = 32;
+
   private createCube(color:string, pos:BABYLON.Vector3): BABYLON.Mesh {
     const box = BABYLON.MeshBuilder.CreateBox("box", {});
 
@@ -139,7 +141,7 @@ export default class Playground {
 
       if(evt.ctrlKey)
       {
-        currentMesh.position.y -= evt.movementY/50;
+        currentMesh.position.y -= evt.movementY/this.decelarationDeltaY;
         return;
       }
 
