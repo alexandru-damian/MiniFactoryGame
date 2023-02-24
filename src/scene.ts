@@ -7,13 +7,32 @@ export default class Playground {
   private readonly spaceBoxSize = 30;
   private readonly decelarationDeltaY = 32;
 
+  private focusedMesh:BABYLON.Mesh;
+
+  private focus(currentMesh)
+  {
+    if(this.focusedMesh && currentMesh != this.focusedMesh)
+        {
+        this.focusedMesh.disableEdgesRendering();}
+        this.focusedMesh = currentMesh;
+        this.focusedMesh.enableEdgesRendering();
+  }
+
+  private unfocus()
+  {
+    if(this.focusedMesh)
+    {
+        this.focusedMesh.disableEdgesRendering();
+    }
+  }
+
   private createCube(color: string, pos: BABYLON.Vector3, sizes): BABYLON.Mesh {
     const box = BABYLON.MeshBuilder.CreateBox("box", {});
 
     box.scaling = new BABYLON.Vector3(sizes[0], sizes[1], sizes[2]);
 
-    box.edgesWidth = 1;
-    box.edgesColor = new BABYLON.Color4(1, 1, 1, 1);
+    box.edgesWidth = 2;
+    box.edgesColor = new BABYLON.Color4(0, 1, 0, 1);
     box.setPivotPoint(new BABYLON.Vector3(this.boxSize/2,0,this.boxSize/2));
     box.position = pos;
 
@@ -148,8 +167,6 @@ export default class Playground {
       if (previousPosition) {
         camera.attachControl();
         previousPosition = null;
-
-        currentMesh?.disableEdgesRendering();
         currentMesh = null;
       }
     };
@@ -162,9 +179,12 @@ export default class Playground {
       if (pickResult.hit) {
         currentMesh = pickResult.pickedMesh;
         if (currentMesh == ground || !currentMesh) {
+          this.unfocus();
           return;
         }
-        currentMesh?.enableEdgesRendering();
+
+        this.focus(currentMesh);
+
         previousPosition = currentMesh.position;
 
         camera.detachControl();
