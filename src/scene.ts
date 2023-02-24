@@ -1,6 +1,5 @@
 import * as BABYLON from "@babylonjs/core";
 import { GridMaterial } from "@babylonjs/materials/grid/gridMaterial";
-import { posix } from "path";
 
 export default class Playground {
   private readonly boxSize = 1;
@@ -10,10 +9,10 @@ export default class Playground {
 
   private readonly decelarationDeltaY = 32;
 
-  private createCube(color: string, pos: BABYLON.Vector3): BABYLON.Mesh {
+  private createCube(color: string, pos: BABYLON.Vector3, sizes): BABYLON.Mesh {
     const box = BABYLON.MeshBuilder.CreateBox("box", {});
 
-    box.scaling = new BABYLON.Vector3(this.boxSize, this.boxSize, this.boxSize);
+    box.scaling = new BABYLON.Vector3(sizes[0],sizes[1],sizes[2]);
 
     box.edgesWidth = 1;
     box.edgesColor = new BABYLON.Color4(1, 1, 1, 1);
@@ -79,9 +78,17 @@ export default class Playground {
 
     scene.hoverCursor = "default";
 
-    let cube = this.createCube("#4A6DE5", new BABYLON.Vector3());
-    let cube1 = this.createCube("#4912E5", new BABYLON.Vector3(3, 1, 4));
-    let cube2 = this.createCube("#43D100", new BABYLON.Vector3(2, 1, 6));
+    let cube = this.createCube("#4A6DE5", new BABYLON.Vector3(),[1,1,1]);
+    let cube1 = this.createCube("#4912E5", new BABYLON.Vector3(3, 1, 4),[1,2,1]);
+    let cube3 = this.createCube("#43D100", new BABYLON.Vector3(2, 1, 6),[2,1,1]);
+    let cube4 = this.createCube("#97D1FF", new BABYLON.Vector3(5, 3, 0),[1,1,2]);
+    let cube5 = this.createCube("#4338DC", new BABYLON.Vector3(6, 3, 7),[1,2,2]);
+    let cube7 = this.createCube("#FFD100", new BABYLON.Vector3(-10, -4, 4),[2,1,2]);
+    let cube8 = this.createCube("#43FF00", new BABYLON.Vector3(-6, -0, 8),[2,2,1]);
+    let cube9 = this.createCube("#57D100", new BABYLON.Vector3(-4, -8, 4),[2,2,2]);
+
+    
+
     cube.actionManager = new BABYLON.ActionManager(scene);
 
     let ground = this.createPlane();
@@ -149,13 +156,11 @@ export default class Playground {
         return;
       }
 
-      console.log(currentMesh.position.y);
-
       if(evt.ctrlKey) {
         previousY = (currentY!=currentMesh.position.y)?currentY:currentMesh.position.y;
         currentY = currentY - evt.movementY / this.decelarationDeltaY;    
         if (Math.abs(currentY - previousY) > 0) {
-          currentMesh.position.y = this.snap(currentY, currentMesh.scaling.y) + currentMesh.scaling.y/2;
+          currentMesh.position.y = this.snap(currentY, currentMesh.scaling.y);
         }
 
         return;
@@ -169,8 +174,8 @@ export default class Playground {
 
       currentMesh.enableEdgesRendering();
 
-      currentMesh.position.x = this.snap(current.x, currentMesh.scaling.y);
-      currentMesh.position.z = this.snap(current.z, currentMesh.scaling.y);
+      currentMesh.position.x = this.snap(current.x, currentMesh.scaling.x);
+      currentMesh.position.z = this.snap(current.z, currentMesh.scaling.z) + this.boxSize/2;
     };
 
     return scene;
