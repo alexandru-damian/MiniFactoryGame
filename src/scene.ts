@@ -7,23 +7,22 @@ export default class Playground {
   private readonly spaceBoxSize = 30;
   private readonly decelarationDeltaY = 32;
 
-  private focusedMesh:BABYLON.Mesh;
+  private hl: BABYLON.HighlightLayer;
 
-  private focus(currentMesh)
-  {
-    if(this.focusedMesh && currentMesh != this.focusedMesh)
-        {
-        this.focusedMesh.disableEdgesRendering();}
-        this.focusedMesh = currentMesh;
-        this.focusedMesh.enableEdgesRendering();
+  private focusedMesh: BABYLON.Mesh;
+
+  private focus(currentMesh) {
+    if (this.focusedMesh && currentMesh != this.focusedMesh) {
+      this.unfocus();
+    }
+    this.focusedMesh = currentMesh;
+    this.focusedMesh.enableEdgesRendering();
+    this.hl.addMesh(this.focusedMesh, BABYLON.Color3.Green());
   }
 
-  private unfocus()
-  {
-    if(this.focusedMesh)
-    {
-        this.focusedMesh.disableEdgesRendering();
-    }
+  private unfocus() {
+    this.hl.removeMesh(this.focusedMesh);
+    this.focusedMesh.disableEdgesRendering();
   }
 
   private createCube(color: string, pos: BABYLON.Vector3, sizes): BABYLON.Mesh {
@@ -33,10 +32,12 @@ export default class Playground {
 
     box.edgesWidth = 2;
     box.edgesColor = new BABYLON.Color4(0, 1, 0, 1);
-    box.setPivotPoint(new BABYLON.Vector3(this.boxSize/2,0,this.boxSize/2));
+    box.setPivotPoint(
+      new BABYLON.Vector3(this.boxSize / 2, 0, this.boxSize / 2)
+    );
     box.position = pos;
 
-    box.position.y = box.scaling.y/2;
+    box.position.y = box.scaling.y / 2;
 
     const boxMat = new BABYLON.StandardMaterial("boxMat");
     boxMat.diffuseColor = BABYLON.Color3.FromHexString(color);
@@ -92,6 +93,7 @@ export default class Playground {
       scene
     );
 
+    this.hl = new BABYLON.HighlightLayer("hl", scene);
     light.intensity = 1;
 
     scene.hoverCursor = "default";
@@ -179,7 +181,9 @@ export default class Playground {
       if (pickResult.hit) {
         currentMesh = pickResult.pickedMesh;
         if (currentMesh == ground || !currentMesh) {
-          this.unfocus();
+          if (this.focusedMesh) {
+            this.unfocus();
+          }
           return;
         }
 
@@ -207,7 +211,9 @@ export default class Playground {
             : currentMesh.position.y;
         currentY = currentY - evt.movementY / this.decelarationDeltaY;
         if (Math.abs(currentY - previousY) > 0) {
-          currentMesh.position.y = this.snap(currentY, currentMesh.scaling.y) + currentMesh.scaling.y/2;
+          currentMesh.position.y =
+            this.snap(currentY, currentMesh.scaling.y) +
+            currentMesh.scaling.y / 2;
         }
 
         return;
