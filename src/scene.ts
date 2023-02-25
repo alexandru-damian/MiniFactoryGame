@@ -1,15 +1,24 @@
 import * as BABYLON from "@babylonjs/core";
 import { GridMaterial } from "@babylonjs/materials/grid/gridMaterial";
 
+enum Rotation {
+  RotLeft = 0,
+  Rotight,
+}
+
 export default class Playground {
   private readonly boxSize = 1;
 
   private readonly spaceBoxSize = 30;
   private readonly decelarationDeltaY = 32;
 
+  private cameraRadius = 15;
+
   private hl: BABYLON.HighlightLayer;
 
   private focusedMesh: BABYLON.Mesh;
+
+  private camera: BABYLON.ArcRotateCamera;
 
   private focus(currentMesh) {
     if (this.focusedMesh && currentMesh != this.focusedMesh) {
@@ -17,7 +26,7 @@ export default class Playground {
     }
     this.focusedMesh = currentMesh;
     this.focusedMesh.enableEdgesRendering();
-    this.hl.addMesh(this.focusedMesh, BABYLON.Color3.Green());
+    this.hl.addMesh(this.focusedMesh, BABYLON.Color3.White(),true);
   }
 
   private unfocus() {
@@ -25,25 +34,35 @@ export default class Playground {
     this.focusedMesh.disableEdgesRendering();
   }
 
+  private setPlaneRelativePosition(
+    mesh: BABYLON.Mesh,
+    oldPos: BABYLON.Vector3
+  ) {
+    let relativePos = new BABYLON.Vector3();
+
+    relativePos.x = mesh.scaling.x % 2 ? oldPos.x : oldPos.x + this.boxSize / 2;
+    relativePos.z = mesh.scaling.z % 2 ? oldPos.z : oldPos.z + this.boxSize / 2;
+    relativePos.y = oldPos.y;
+
+    return relativePos;
+  }
+
   private createCube(color: string, pos: BABYLON.Vector3, sizes): BABYLON.Mesh {
     const box = BABYLON.MeshBuilder.CreateBox("box", {});
 
     box.scaling = new BABYLON.Vector3(sizes[0], sizes[1], sizes[2]);
 
-    box.edgesWidth = 2;
-    box.edgesColor = new BABYLON.Color4(0, 1, 0, 1);
-    box.setPivotPoint(
-      new BABYLON.Vector3(this.boxSize / 2, 0, this.boxSize / 2)
-    );
-    box.position = pos;
+    box.edgesWidth = 1;
+    box.edgesColor = new BABYLON.Color4(1, 1, 1, 1);
+    box.setPivotPoint(new BABYLON.Vector3(0, 0, 0));
 
+    box.position = this.setPlaneRelativePosition(box, pos);
     box.position.y = box.scaling.y / 2;
 
     const boxMat = new BABYLON.StandardMaterial("boxMat");
     boxMat.diffuseColor = BABYLON.Color3.FromHexString(color);
 
     box.material = boxMat;
-
     return box;
   }
 
@@ -57,8 +76,8 @@ export default class Playground {
     ground.material = grid;
     grid.mainColor = new BABYLON.Color3(0.09, 0.21, 0.62);
 
-    ground.position.x += this.boxSize / 2;
-    ground.position.z += this.boxSize / 2;
+    ground.position.x -= this.boxSize / 2;
+    ground.position.z -= this.boxSize / 2;
 
     return ground;
   }
@@ -73,20 +92,27 @@ export default class Playground {
     return isCloser ? Math.floor(x + res) : Math.ceil(x + res);
   }
 
+  private onObjectCamera() {
+    this.camera.detachControl();
+  }
+  private offObjectCamera(canvas) {
+    this.camera.attachControl(canvas, true);
+  }
+
   public createScene(
     engine: BABYLON.Engine,
     canvas: HTMLCanvasElement
   ): BABYLON.Scene {
     // This creates a basic Babylon Scene object (non-mesh)
     var scene = new BABYLON.Scene(engine);
-    const camera = new BABYLON.ArcRotateCamera(
+    this.camera = new BABYLON.ArcRotateCamera(
       "camera",
       -Math.PI / 2,
       Math.PI / 2.5,
-      15,
+      this.cameraRadius,
       new BABYLON.Vector3(0, 0, 0)
     );
-    camera.attachControl(canvas, true);
+    this.camera.attachControl(canvas, true);
     const light = new BABYLON.HemisphericLight(
       "light",
       new BABYLON.Vector3(1, 1, 0),
@@ -98,7 +124,11 @@ export default class Playground {
 
     scene.hoverCursor = "default";
 
-    let cube = this.createCube("#4A6DE5", new BABYLON.Vector3(), [1, 1, 1]);
+    let cube = this.createCube(
+      "#4A6DE5",
+      new BABYLON.Vector3(0, 0, 0),
+      [1, 1, 1]
+    );
     let cube1 = this.createCube(
       "#4912E5",
       new BABYLON.Vector3(3, 0, 4),
@@ -167,7 +197,7 @@ export default class Playground {
       }
 
       if (previousPosition) {
-        camera.attachControl();
+        this.offObjectCamera(canvas);
         previousPosition = null;
         currentMesh = null;
       }
@@ -189,9 +219,9 @@ export default class Playground {
 
         this.focus(currentMesh);
 
-        previousPosition = currentMesh.position;
+        this.onObjectCamera();
 
-        camera.detachControl();
+        previousPosition = currentMesh.position;
       }
     };
 
@@ -227,8 +257,15 @@ export default class Playground {
 
       currentMesh.enableEdgesRendering();
 
-      currentMesh.position.x = this.snap(current.x, currentMesh.scaling.x);
-      currentMesh.position.z = this.snap(current.z, currentMesh.scaling.z);
+      let newPos = new BABYLON.Vector3();
+
+      newPos.x = this.snap(current.x, currentMesh.scaling.x);
+      newPos.z = this.snap(current.z, currentMesh.scaling.z);
+
+      newPos = this.setPlaneRelativePosition(currentMesh, newPos);
+
+      currentMesh.position.x = newPos.x;
+      currentMesh.position.z = newPos.z;
     };
 
     return scene;
