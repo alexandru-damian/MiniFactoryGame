@@ -12,12 +12,13 @@ export default class Playground {
   private readonly spaceBoxSize = 30;
   private readonly decelarationDeltaY = 32;
 
-  private cameraRadius = 15;
+  private cameraRadius = 10;
 
   private hl: BABYLON.HighlightLayer;
 
   private focusedMesh: BABYLON.Mesh;
 
+  private zoomSlowness = 5;
   private camera: BABYLON.ArcRotateCamera;
 
   private focus(currentMesh) {
@@ -94,9 +95,11 @@ export default class Playground {
 
   private onObjectCamera() {
     this.camera.detachControl();
+    this.camera.lowerRadiusLimit = this.camera.upperRadiusLimit = this.camera.radius;
   }
   private offObjectCamera(canvas) {
     this.camera.attachControl(canvas, true);
+    this.camera.lowerRadiusLimit = this.camera.upperRadiusLimit = null;
   }
 
   public createScene(
@@ -113,6 +116,8 @@ export default class Playground {
       new BABYLON.Vector3(0, 0, 0)
     );
     this.camera.attachControl(canvas, true);
+    this.camera.wheelPrecision = this.zoomSlowness;
+
     const light = new BABYLON.HemisphericLight(
       "light",
       new BABYLON.Vector3(1, 1, 0),
@@ -197,7 +202,6 @@ export default class Playground {
       }
 
       if (previousPosition) {
-        this.offObjectCamera(canvas);
         previousPosition = null;
         currentMesh = null;
       }
@@ -212,13 +216,13 @@ export default class Playground {
         currentMesh = pickResult.pickedMesh;
         if (currentMesh == ground || !currentMesh) {
           if (this.focusedMesh) {
+            this.offObjectCamera(canvas);
             this.unfocus();
           }
           return;
         }
 
         this.focus(currentMesh);
-
         this.onObjectCamera();
 
         previousPosition = currentMesh.position;
