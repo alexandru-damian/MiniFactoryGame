@@ -36,15 +36,19 @@ export default class Playground {
     this.focusedMesh = new BABYLON.Mesh("");
   }
 
-  private setPlaneRelativePosition(
+  private setRelativePosition(
     mesh: BABYLON.Mesh,
     oldPos: BABYLON.Vector3
   ) {
+
+    console.log("Previous position"+ oldPos);
     let relativePos = new BABYLON.Vector3();
 
     relativePos.x = mesh.scaling.x % 2 ? oldPos.x : oldPos.x + this.boxSize / 2;
     relativePos.z = mesh.scaling.z % 2 ? oldPos.z : oldPos.z + this.boxSize / 2;
     relativePos.y = oldPos.y;
+
+    console.log("relative position"+ relativePos);
 
     return relativePos;
   }
@@ -68,24 +72,24 @@ export default class Playground {
         break;
       }
     }
-    if (
-      this.focusedMesh.rotation.y == Math.PI / 2 ||
-      this.focusedMesh.rotation.y == Math.PI ||
-      this.focusedMesh.rotation.y == (3 * Math.PI) / 2 ||
-      this.focusedMesh.rotation.y == 2 * Math.PI
-    ) {
-
-      console.log("Before"+this.focusedMesh.position);
-      this.focusedMesh.position.x = this.snap(
-        this.focusedMesh.position.x,
-        this.focusedMesh.scaling.x
-      );
-      this.focusedMesh.position.z = this.snap(
-        this.focusedMesh.position.z,
-        this.focusedMesh.scaling.z
-      );
-      console.log("After"+this.focusedMesh.position);
-    }
+    // console.log("Rotation"+this.focusedMesh.position);
+    // if (
+    //   this.focusedMesh.rotation.y == Math.PI / 2 ||
+    //   this.focusedMesh.rotation.y == Math.PI ||
+    //   this.focusedMesh.rotation.y == (3 * Math.PI) / 2 ||
+    //   this.focusedMesh.rotation.y == 2 * Math.PI ||
+    //   this.focusedMesh.rotation.y == 0
+    // ) {
+    //   this.focusedMesh.position.x = this.snap(
+    //     this.focusedMesh.position.x,
+    //     this.focusedMesh.scaling.x
+    //   );
+    //   this.focusedMesh.position.z = this.snap(
+    //     this.focusedMesh.position.z,
+    //     this.focusedMesh.scaling.z
+    //   );
+    //   console.log("After rotation"+this.focusedMesh.position);
+    // }
   }
 
   private createCube(color: string, pos: BABYLON.Vector3, sizes): BABYLON.Mesh {
@@ -95,9 +99,12 @@ export default class Playground {
 
     box.edgesWidth = 1;
     box.edgesColor = new BABYLON.Color4(1, 1, 1, 1);
-    box.setPivotPoint(new BABYLON.Vector3(0, 0, 0));
 
-    box.position = this.setPlaneRelativePosition(box, pos);
+    console.log("Previous position"+ pos);
+    //box.position = this.setRelativePosition(box, pos);
+    box.position.x = this.snap(pos.x, box.scaling.x);
+    box.position.z = this.snap(pos.z, box.scaling.z);
+    console.log("Snap position"+ box.position);
     box.position.y = box.scaling.y / 2;
 
     const boxMat = new BABYLON.StandardMaterial("boxMat");
@@ -116,21 +123,16 @@ export default class Playground {
     const grid = new GridMaterial("groundMaterial");
     ground.material = grid;
     grid.mainColor = new BABYLON.Color3(0.09, 0.21, 0.62);
-
-    ground.position.x -= this.boxSize / 2;
-    ground.position.z -= this.boxSize / 2;
-
     return ground;
   }
 
   private snap(x: number, referenceSize: number) {
-    let res = x % referenceSize;
-    let isCloser = false;
-    if (Math.abs(res) == 0) {
-      isCloser = true;
+    let newX = Math.floor(x);
+    if (Math.abs(x - Math.trunc(x)) == 0) {
+      newX = Math.ceil(x);
     }
-
-    return isCloser ? Math.floor(x + res) : Math.ceil(x + res);
+    
+    return (newX + referenceSize/2);
   }
 
   private onObjectCamera() {
@@ -287,8 +289,7 @@ export default class Playground {
         currentY = currentY - evt.movementY / this.decelarationDeltaY;
         if (Math.abs(currentY - previousY) > 0) {
           currentMesh.position.y =
-            this.snap(currentY, currentMesh.scaling.y) +
-            currentMesh.scaling.y / 2;
+            this.snap(currentY, currentMesh.scaling.y);
         }
 
         return;
@@ -300,6 +301,8 @@ export default class Playground {
         return;
       }
 
+      console.log("Moving"+currentMesh.position);
+
       currentMesh.enableEdgesRendering();
 
       let newPos = new BABYLON.Vector3();
@@ -307,10 +310,12 @@ export default class Playground {
       newPos.x = this.snap(current.x, currentMesh.scaling.x);
       newPos.z = this.snap(current.z, currentMesh.scaling.z);
 
-      newPos = this.setPlaneRelativePosition(currentMesh, newPos);
+      //newPos = this.setRelativePosition(currentMesh, newPos);
 
       currentMesh.position.x = newPos.x;
       currentMesh.position.z = newPos.z;
+
+      console.log("Moved"+currentMesh.position);
     };
 
     window.addEventListener("wheel", (evt) => {
