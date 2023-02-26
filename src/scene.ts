@@ -12,7 +12,7 @@ export default class Playground {
   private readonly spaceBoxSize = 30;
   private readonly decelarationDeltaY = 32;
 
-  private cameraRadius = 10;
+  private cameraRadius = 20;
 
   private hl: BABYLON.HighlightLayer;
 
@@ -27,12 +27,13 @@ export default class Playground {
     }
     this.focusedMesh = currentMesh;
     this.focusedMesh.enableEdgesRendering();
-    this.hl.addMesh(this.focusedMesh, BABYLON.Color3.White(),true);
+    this.hl.addMesh(this.focusedMesh, BABYLON.Color3.White(), true);
   }
 
   private unfocus() {
     this.hl.removeMesh(this.focusedMesh);
     this.focusedMesh.disableEdgesRendering();
+    this.focusedMesh = new BABYLON.Mesh("");
   }
 
   private setPlaneRelativePosition(
@@ -46,6 +47,45 @@ export default class Playground {
     relativePos.y = oldPos.y;
 
     return relativePos;
+  }
+
+  private rotate(direction: Rotation) {
+    //Rotate object with 45 degrees
+    const amount = Math.PI / 4;
+    if (!this.focusedMesh) {
+      return;
+    }
+    switch (direction) {
+      case Rotation.RotLeft: {
+        this.focusedMesh.rotation.y += amount;
+        break;
+      }
+      case Rotation.Rotight: {
+        this.focusedMesh.rotation.y -= amount;
+        break;
+      }
+      default: {
+        break;
+      }
+    }
+    if (
+      this.focusedMesh.rotation.y == Math.PI / 2 ||
+      this.focusedMesh.rotation.y == Math.PI ||
+      this.focusedMesh.rotation.y == (3 * Math.PI) / 2 ||
+      this.focusedMesh.rotation.y == 2 * Math.PI
+    ) {
+
+      console.log("Before"+this.focusedMesh.position);
+      this.focusedMesh.position.x = this.snap(
+        this.focusedMesh.position.x,
+        this.focusedMesh.scaling.x
+      );
+      this.focusedMesh.position.z = this.snap(
+        this.focusedMesh.position.z,
+        this.focusedMesh.scaling.z
+      );
+      console.log("After"+this.focusedMesh.position);
+    }
   }
 
   private createCube(color: string, pos: BABYLON.Vector3, sizes): BABYLON.Mesh {
@@ -95,7 +135,8 @@ export default class Playground {
 
   private onObjectCamera() {
     this.camera.detachControl();
-    this.camera.lowerRadiusLimit = this.camera.upperRadiusLimit = this.camera.radius;
+    this.camera.lowerRadiusLimit = this.camera.upperRadiusLimit =
+      this.camera.radius;
   }
   private offObjectCamera(canvas) {
     this.camera.attachControl(canvas, true);
@@ -110,8 +151,8 @@ export default class Playground {
     var scene = new BABYLON.Scene(engine);
     this.camera = new BABYLON.ArcRotateCamera(
       "camera",
-      -Math.PI / 2,
-      Math.PI / 2.5,
+      -Math.PI / 2 ,
+      Math.PI /4 ,
       this.cameraRadius,
       new BABYLON.Vector3(0, 0, 0)
     );
@@ -271,6 +312,11 @@ export default class Playground {
       currentMesh.position.x = newPos.x;
       currentMesh.position.z = newPos.z;
     };
+
+    window.addEventListener("wheel", (evt) => {
+      let direction = evt.deltaY < 0 ? Rotation.RotLeft : Rotation.Rotight;
+      this.rotate(direction);
+    });
 
     return scene;
   }
