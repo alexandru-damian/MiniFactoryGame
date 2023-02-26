@@ -39,8 +39,6 @@ export default class Playground {
   private rotate(direction: Rotation) {
     //Rotate object with 45 degrees
     const amount = Math.PI / 4;
-    let orientationX = 1;
-    let orientationZ = 1;
     if (!this.focusedMesh) {
       return;
     }
@@ -62,27 +60,6 @@ export default class Playground {
         break;
       }
     }
-    let rotationDegree = Math.abs(
-      BABYLON.Tools.ToDegrees(this.focusedMesh.rotation.y)
-    );
-
-    console.log(rotationDegree);
-
-    if (rotationDegree % 180 == 0) {
-      orientationX = -1;
-      orientationZ = 1;
-    } else if (rotationDegree % 90 == 0) {
-      orientationX = 1;
-      orientationZ = -1;
-    }
-
-    if (orientationX * orientationZ == 1) {
-      return;
-    }
-    if ((this.focusedMesh.scaling.x + this.focusedMesh.scaling.z) % 2 != 0) {
-      this.focusedMesh.position.x -= (this.boxSize / 2) * orientationX;
-      this.focusedMesh.position.z -= (this.boxSize / 2) * orientationZ;
-    }
   }
 
   private createCube(color: string, pos: BABYLON.Vector3, sizes): BABYLON.Mesh {
@@ -93,8 +70,8 @@ export default class Playground {
     box.edgesWidth = 1;
     box.edgesColor = new BABYLON.Color4(1, 1, 1, 1);
 
-    box.position.x = this.snap(pos.x, box.scaling.x);
-    box.position.z = this.snap(pos.z, box.scaling.z);
+    box.position.x = this.snap(pos.x, this.boxSize, box.scaling.x);
+    box.position.z = this.snap(pos.z, this.boxSize, box.scaling.z);
     box.position.y = box.scaling.y / 2;
 
     const boxMat = new BABYLON.StandardMaterial("boxMat");
@@ -116,13 +93,13 @@ export default class Playground {
     return ground;
   }
 
-  private snap(x: number, referenceSize: number) {
-    let newX = Math.floor(x);
-    if (Math.abs(x - Math.trunc(x)) == 0) {
-      newX = Math.ceil(x);
-    }
+  private getClosestCell(x: number) {
+    return Math.abs(x - Math.trunc(x)) >= 0 ? Math.ceil(x) : Math.floor(x);
+  }
 
-    return newX + referenceSize / 2;
+  private snap(x: number, referenceSize: number, size) {
+    let newX = this.getClosestCell(x);
+    return newX + size / 2;
   }
 
   private onObjectCamera() {
@@ -180,7 +157,7 @@ export default class Playground {
     let cube4 = this.createCube(
       "#97D1FF",
       new BABYLON.Vector3(5, 0, 0),
-      [1, 1, 2]
+      [2, 1, 3]
     );
     let cube5 = this.createCube(
       "#4338DC",
@@ -278,27 +255,31 @@ export default class Playground {
             : currentMesh.position.y;
         currentY = currentY - evt.movementY / this.decelarationDeltaY;
         if (Math.abs(currentY - previousY) > 0) {
-          currentMesh.position.y = this.snap(currentY, currentMesh.scaling.y);
+          currentMesh.position.y = this.snap(
+            currentY,
+            this.boxSize,
+            currentMesh.scaling.y
+          );
         }
 
         return;
       }
 
       let current = getGroundPosition();
+      console.log("Curr:" + current);
 
       if (!current) {
         return;
       }
-      currentMesh.enableEdgesRendering();
 
-      currentMesh.position.x = this.snap(current.x, currentMesh.scaling.x);
-      currentMesh.position.z = this.snap(current.z, currentMesh.scaling.z);
+      currentMesh.position.x = this.snap(current.x,this.boxSize, currentMesh.scaling.x);
+      currentMesh.position.z = this.snap(current.z,this.boxSize ,currentMesh.scaling.z);
     };
 
     window.addEventListener(
       "wheel",
       (evt) => {
-        if (this.focusedMesh.id == "") {
+        if (this.focusedMesh == ground) {
           return;
         }
 
