@@ -6,48 +6,42 @@ enum Rotation {
   Rotight,
 }
 
-export class Object
-{
-    private mesh:BABYLON.Mesh;
-    public orientationScales:BABYLON.Vector3;
+export class Object {
+  private mesh: BABYLON.Mesh;
+  public orientationScales: BABYLON.Vector3;
 
-    private empty: boolean;
+  private empty: boolean;
 
-    constructor()
-    {
-            this.crateEmptyObject();
-            return;
+  constructor() {
+    this.crateEmptyObject();
+    return;
+  }
+
+  private crateEmptyObject() {
+    this.empty = true;
+    this.orientationScales = new BABYLON.Vector3();
+  }
+
+  public getMesh() {
+    return this.mesh;
+  }
+
+  public setMesh(mesh: BABYLON.Mesh) {
+    if ((mesh.name = "")) {
+      return;
     }
 
-    private crateEmptyObject()
-    {
-        this.empty = true;
-        this.orientationScales = new BABYLON.Vector3();
-    }
+    this.empty = false;
 
-    public getMesh()
-    {
-        return this.mesh;
-    }
+    this.mesh = mesh;
+    this.orientationScales.x =mesh.scaling.x;
+    this.orientationScales.z =mesh.scaling.z;
+    this.orientationScales.y =mesh.scaling.y;
+  }
 
-    public setMesh(mesh:BABYLON.Mesh)
-    {
-        if(mesh.name= "")
-        {
-            return;
-        }
-
-        this.empty = false;
-
-        this.mesh = mesh;
-        this.orientationScales = mesh.scaling;
-    }
-
-    public isEmpty()
-    {
-        return this.empty;
-    }
-
+  public isEmpty() {
+    return this.empty;
+  }
 }
 
 export default class Playground {
@@ -66,7 +60,10 @@ export default class Playground {
   private camera: BABYLON.ArcRotateCamera;
 
   private focus(currentMesh) {
-    if (!this.focusedObject.isEmpty() && currentMesh != this.focusedObject.getMesh()) {
+    if (
+      !this.focusedObject.isEmpty() &&
+      currentMesh != this.focusedObject.getMesh()
+    ) {
       this.unfocus();
     }
     this.focusedObject.setMesh(currentMesh);
@@ -110,28 +107,41 @@ export default class Playground {
     );
 
     if (rotationDegree % 180 == 0) {
-        isRightAngle = true;
-        this.focusedObject.orientationScales =new BABYLON.Vector3(this.focusedObject.getMesh().scaling.z,0,this.focusedObject.getMesh().scaling.x);
+      isRightAngle = true;
+      this.focusedObject.orientationScales.x = this.focusedObject.getMesh().scaling.x,
+      this.focusedObject.orientationScales.z = this.focusedObject.getMesh().scaling.z;
     } else if (rotationDegree % 90 == 0) {
-        isRightAngle = true;
-        this.focusedObject.orientationScales = new BABYLON.Vector3(this.focusedObject.getMesh().scaling.x,0,this.focusedObject.getMesh().scaling.z);
+      isRightAngle = true;
+      this.focusedObject.orientationScales.x = this.focusedObject.getMesh().scaling.z,
+      this.focusedObject.orientationScales.z = this.focusedObject.getMesh().scaling.x;
     }
 
-    if(!isRightAngle)
-    {
-        return;
+    if (!isRightAngle) {
+      return;
     }
 
-    console.log("Before "+this.focusedObject.getMesh().position);
-    if ((this.focusedObject.getMesh().scaling.x + this.focusedObject.getMesh().scaling.z) % 2 != 0) {
-      let offsetX = (this.focusedObject.orientationScales.x % 2 == 0)?this.boxSize/2:0;
-      let offsetZ = (this.focusedObject.orientationScales.z % 2 == 0)?this.boxSize/2:0;
+    console.log("R orOff " + this.focusedObject.orientationScales);
+    console.log("R or " + this.focusedObject.getMesh().scaling);
+    if (
+      (this.focusedObject.getMesh().scaling.x +
+        this.focusedObject.getMesh().scaling.z) %
+        2 !=
+      0
+    ) {
+      let offsetX =
+        this.focusedObject.orientationScales.x % 2 != 0 ? this.boxSize / 2 : 0;
+      let offsetZ =
+        this.focusedObject.orientationScales.z % 2 != 0 ? this.boxSize / 2 : 0;
 
-      this.focusedObject.getMesh().position.x = this.getClosestCell(this.focusedObject.getMesh().position.x, offsetX);
-      this.focusedObject.getMesh().position.z = this.getClosestCell(this.focusedObject.getMesh().position.z, offsetZ);
+      this.focusedObject.getMesh().position.x = this.getClosestCell(
+        this.focusedObject.getMesh().position.x,
+        offsetX
+      );
+      this.focusedObject.getMesh().position.z = this.getClosestCell(
+        this.focusedObject.getMesh().position.z,
+        offsetZ
+      );
     }
-
-    console.log("After"+ this.focusedObject.getMesh().position);
   }
 
   private createCube(color: string, pos: BABYLON.Vector3, sizes): BABYLON.Mesh {
@@ -167,14 +177,16 @@ export default class Playground {
     return ground;
   }
 
-  private getClosestCell(x: number, offsetX:number = 0) {
-    return (Math.abs(x - Math.trunc(x)) > 0 ? Math.ceil(x) : Math.floor(x)) - offsetX;
+  private getClosestCell(x: number, offsetX: number = 0) {
+    return (
+      (Math.abs(x - Math.trunc(x)) > 0 ? Math.ceil(x) : Math.floor(x)) - offsetX
+    );
   }
 
-  private snap(x: number, size) {
-    let newX = this.getClosestCell(x);
+  private snap(x: number, size: number, offsetX: number = 0) {
+    let newX = this.getClosestCell(x, offsetX);
 
-    return newX + size/2;
+    return newX + size / 2;
   }
 
   private onObjectCamera() {
@@ -215,48 +227,21 @@ export default class Playground {
     scene.hoverCursor = "default";
     this.focusedObject = new Object();
 
-    let cube = this.createCube(
+    let cube = new Object();
+    cube.setMesh(this.createCube(
       "#4A6DE5",
       new BABYLON.Vector3(0, 0, 0),
       [1, 1, 1]
-    );
-    let cube1 = this.createCube(
+    ));
+    let cube1 = new Object();
+
+    cube1.setMesh(this.createCube(
       "#4912E5",
       new BABYLON.Vector3(3, 0, 4),
-      [1, 2, 1]
-    );
-    let cube3 = this.createCube(
-      "#43D100",
-      new BABYLON.Vector3(2, 0, 6),
-      [2, 1, 1]
-    );
-    let cube4 = this.createCube(
-      "#97D1FF",
-      new BABYLON.Vector3(5, 0, 0),
       [2, 1, 3]
-    );
-    let cube5 = this.createCube(
-      "#4338DC",
-      new BABYLON.Vector3(6, 0, 7),
-      [1, 2, 3]
-    );
-    let cube7 = this.createCube(
-      "#FFD100",
-      new BABYLON.Vector3(-10, 0, 4),
-      [2, 1, 2]
-    );
-    let cube8 = this.createCube(
-      "#43FF00",
-      new BABYLON.Vector3(-6, 0, 8),
-      [2, 2, 1]
-    );
-    let cube9 = this.createCube(
-      "#57D100",
-      new BABYLON.Vector3(-4, 0, 4),
-      [3, 3, 3]
-    );
+    ));
 
-    cube.actionManager = new BABYLON.ActionManager(scene);
+    //cube.actionManager = new BABYLON.ActionManager(scene);
 
     let ground = this.createPlane();
     let currentMesh;
@@ -343,10 +328,33 @@ export default class Playground {
         return;
       }
 
-      currentMesh.position.x = this.getClosestCell(current.x);
-      currentMesh.position.x += (this.focusedObject.orientationScales.x % 2 == 0)?this.boxSize/2:0;
-      currentMesh.position.z = this.getClosestCell(current.z);
-      currentMesh.position.z += (this.focusedObject.orientationScales.z % 2 == 0)?this.boxSize/2:0;
+      console.log("Curr: " + current);
+      console.log("Before: " + currentMesh.position);
+
+      let offsetX =
+        this.focusedObject.orientationScales.x !=
+        this.focusedObject.getMesh().scaling.x
+          ? this.boxSize / 2
+          : 0;
+      let offsetZ =
+        this.focusedObject.orientationScales.z !=
+        this.focusedObject.getMesh().scaling.z
+          ? this.boxSize / 2
+          : 0;
+
+      console.log("orOff " +this.focusedObject.orientationScales);
+      console.log("or" + this.focusedObject.getMesh().scaling);
+
+      currentMesh.position.x = this.snap(
+        current.x,
+        this.focusedObject.orientationScales.x
+      );
+      currentMesh.position.z = this.snap(
+        current.z,
+        this.focusedObject.orientationScales.z
+      );
+
+      console.log("After: " + currentMesh.position);
     };
 
     window.addEventListener(
