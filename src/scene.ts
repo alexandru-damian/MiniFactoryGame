@@ -166,10 +166,10 @@ export default class Playground {
     }
   }
 
-  private createCube(id:string ,color: string, pos: BABYLON.Vector3, sizes): BABYLON.Mesh {
+  private createCube(id:string ,color: string, pos: BABYLON.Vector3, sizes:BABYLON.Vector3): BABYLON.Mesh {
     const box = BABYLON.MeshBuilder.CreateBox(id, {});
 
-    box.scaling = new BABYLON.Vector3(sizes[0], sizes[1], sizes[2]);
+    box.scaling = sizes.clone();
 
     box.edgesWidth = 1;
     box.edgesColor = new BABYLON.Color4(1, 1, 1, 1);
@@ -219,6 +219,24 @@ export default class Playground {
     this.camera.lowerRadiusLimit = this.camera.upperRadiusLimit = null;
   }
 
+  private createTestMeshes(size: number , colors:string[], coords:Array<BABYLON.Vector3>, scales:Array<BABYLON.Vector3>)
+    {
+        for(let index=0;index<size;++index)
+        {
+            this.objects.set(this.sizeObjects, new Object());
+            this.objects
+              .get(this.sizeObjects++)
+              ?.setMesh(
+                this.createCube(
+                  String(this.sizeObjects - 1),
+                  colors[index],
+                  coords[index],
+                  scales[index]
+                )
+              );
+        }
+    };
+
   public createScene(
     engine: BABYLON.Engine,
     canvas: HTMLCanvasElement
@@ -250,28 +268,29 @@ export default class Playground {
     this.objects = new Map<number, Object>();
     this.sizeObjects = this.objects.size;
 
-    this.objects.set(this.objects.size, new Object());
-    this.objects
-      .get(this.sizeObjects++)
-      ?.setMesh(
-        this.createCube(
-          String(this.objects.size - 1),
-          "#4912E5",
-          new BABYLON.Vector3(5, 0, 0),
-          [2, 1, 3]
-        )
-      );
-    this.objects.set(this.objects.size, new Object());
-    this.objects
-      .get(this.sizeObjects++)
-      ?.setMesh(
-        this.createCube(
-          String(this.objects.size - 1),
-          "#DE2390",
-          new BABYLON.Vector3(-4, 0, 3),
-          [3, 2, 1]
-        )
-      );
+    let colors = ["#4A6DE5","#4912E5","#43D100","#97D1FF","#4338DC","#FFD100","#43FF00","#57D100"];
+    let coords:Array<BABYLON.Vector3> = new Array();
+    let scales:Array<BABYLON.Vector3> = new Array();
+
+    coords.push(new BABYLON.Vector3());
+    coords.push(new BABYLON.Vector3(3,0,4));
+    coords.push(new BABYLON.Vector3(2,0,6));
+    coords.push(new BABYLON.Vector3(5,0,0));
+    coords.push(new BABYLON.Vector3(6,0,7));
+    coords.push(new BABYLON.Vector3(-10,0,4));
+    coords.push(new BABYLON.Vector3(-6,0,8));
+    coords.push(new BABYLON.Vector3(-4,0,8));
+
+    scales.push(new BABYLON.Vector3(1,1,1));
+    scales.push(new BABYLON.Vector3(1,2,1));
+    scales.push(new BABYLON.Vector3(2,1,1));
+    scales.push(new BABYLON.Vector3(1,1,2));
+    scales.push(new BABYLON.Vector3(1,2,3));
+    scales.push(new BABYLON.Vector3(2,1,2));
+    scales.push(new BABYLON.Vector3(2,2,1));
+    scales.push(new BABYLON.Vector3(3,3,3));
+
+    this.createTestMeshes(colors.length, colors, coords,scales);
 
     let ground = this.createPlane();
     let currentMesh;
