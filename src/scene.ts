@@ -91,7 +91,6 @@ export default class Playground {
   }
 
   private unfocus() {
-    console.log(this.objects);
     this.hl.removeMesh(this.focusedObject.getMesh());
     this.focusedObject.getMesh().disableEdgesRendering();
     this.objects.set(Number(this.focusedObject.getMesh().id), this.focusedObject.cloneObjProperties());
@@ -145,8 +144,6 @@ export default class Playground {
       return;
     }
 
-    console.log("R orOff " + this.focusedObject.orientationScales);
-    console.log("R or " + this.focusedObject.getMesh().scaling);
     if (
       (this.focusedObject.getMesh().scaling.x +
         this.focusedObject.getMesh().scaling.z) %
@@ -361,9 +358,6 @@ export default class Playground {
         return;
       }
 
-      console.log("Curr: " + current);
-      console.log("Before: " + currentMesh.position);
-
       let offsetX =
         this.focusedObject.orientationScales.x !=
         this.focusedObject.getMesh().scaling.x
@@ -375,9 +369,6 @@ export default class Playground {
           ? this.boxSize / 2
           : 0;
 
-      console.log("orOff " + this.focusedObject.orientationScales);
-      console.log("or" + this.focusedObject.getMesh().scaling);
-
       currentMesh.position.x = this.snap(
         current.x,
         this.focusedObject.orientationScales.x
@@ -387,7 +378,6 @@ export default class Playground {
         this.focusedObject.orientationScales.z
       );
 
-      console.log("After: " + currentMesh.position);
     };
 
     window.addEventListener(
