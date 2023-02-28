@@ -38,8 +38,7 @@ class Object {
     }
   }
 
-  public cloneObjProperties(): Object
-  {
+  public cloneObjProperties(): Object {
     let newObj = new Object();
 
     newObj.empty = this.empty;
@@ -93,7 +92,10 @@ export default class Playground {
   private unfocus() {
     this.hl.removeMesh(this.focusedObject.getMesh());
     this.focusedObject.getMesh().disableEdgesRendering();
-    this.objects.set(Number(this.focusedObject.getMesh().id), this.focusedObject.cloneObjProperties());
+    this.objects.set(
+      Number(this.focusedObject.getMesh().id),
+      this.focusedObject.cloneObjProperties()
+    );
     this.focusedObject = new Object();
   }
 
@@ -127,18 +129,18 @@ export default class Playground {
     );
 
     if (rotationDegree % 180 == 0) {
-        isRightAngle = true;
-        this.focusedObject.orientationScales.x =
-          this.focusedObject.getMesh().scaling.x;
-        this.focusedObject.orientationScales.z =
-          this.focusedObject.getMesh().scaling.z;
-      } else if (rotationDegree % 90 == 0) {
-        isRightAngle = true;
-        this.focusedObject.orientationScales.x =
-          this.focusedObject.getMesh().scaling.z;
-        this.focusedObject.orientationScales.z =
-          this.focusedObject.getMesh().scaling.x;
-      }
+      isRightAngle = true;
+      this.focusedObject.orientationScales.x =
+        this.focusedObject.getMesh().scaling.x;
+      this.focusedObject.orientationScales.z =
+        this.focusedObject.getMesh().scaling.z;
+    } else if (rotationDegree % 90 == 0) {
+      isRightAngle = true;
+      this.focusedObject.orientationScales.x =
+        this.focusedObject.getMesh().scaling.z;
+      this.focusedObject.orientationScales.z =
+        this.focusedObject.getMesh().scaling.x;
+    }
 
     if (!isRightAngle) {
       return;
@@ -166,7 +168,12 @@ export default class Playground {
     }
   }
 
-  private createCube(id:string ,color: string, pos: BABYLON.Vector3, sizes:BABYLON.Vector3): BABYLON.Mesh {
+  private createCube(
+    id: string,
+    color: string,
+    pos: BABYLON.Vector3,
+    sizes: BABYLON.Vector3
+  ): BABYLON.Mesh {
     const box = BABYLON.MeshBuilder.CreateBox(id, {});
 
     box.scaling = sizes.clone();
@@ -219,23 +226,26 @@ export default class Playground {
     this.camera.lowerRadiusLimit = this.camera.upperRadiusLimit = null;
   }
 
-  private createTestMeshes(size: number , colors:string[], coords:Array<BABYLON.Vector3>, scales:Array<BABYLON.Vector3>)
-    {
-        for(let index=0;index<size;++index)
-        {
-            this.objects.set(this.sizeObjects, new Object());
-            this.objects
-              .get(this.sizeObjects++)
-              ?.setMesh(
-                this.createCube(
-                  String(this.sizeObjects - 1),
-                  colors[index],
-                  coords[index],
-                  scales[index]
-                )
-              );
-        }
-    };
+  private createTestMeshes(
+    size: number,
+    colors: string[],
+    coords: Array<BABYLON.Vector3>,
+    scales: Array<BABYLON.Vector3>
+  ) {
+    for (let index = 0; index < size; ++index) {
+      this.objects.set(this.sizeObjects, new Object());
+      this.objects
+        .get(this.sizeObjects++)
+        ?.setMesh(
+          this.createCube(
+            String(this.sizeObjects - 1),
+            colors[index],
+            coords[index],
+            scales[index]
+          )
+        );
+    }
+  }
 
   public createScene(
     engine: BABYLON.Engine,
@@ -268,29 +278,38 @@ export default class Playground {
     this.objects = new Map<number, Object>();
     this.sizeObjects = this.objects.size;
 
-    let colors = ["#4A6DE5","#4912E5","#43D100","#97D1FF","#4338DC","#FFD100","#43FF00","#57D100"];
-    let coords:Array<BABYLON.Vector3> = new Array();
-    let scales:Array<BABYLON.Vector3> = new Array();
+    let colors = [
+      "#4A6DE5",
+      "#4912E5",
+      "#43D100",
+      "#97D1FF",
+      "#4338DC",
+      "#FFD100",
+      "#43FF00",
+      "#57D100",
+    ];
+    let coords: Array<BABYLON.Vector3> = new Array();
+    let scales: Array<BABYLON.Vector3> = new Array();
 
     coords.push(new BABYLON.Vector3());
-    coords.push(new BABYLON.Vector3(3,0,4));
-    coords.push(new BABYLON.Vector3(2,0,6));
-    coords.push(new BABYLON.Vector3(5,0,0));
-    coords.push(new BABYLON.Vector3(6,0,7));
-    coords.push(new BABYLON.Vector3(-10,0,4));
-    coords.push(new BABYLON.Vector3(-6,0,8));
-    coords.push(new BABYLON.Vector3(-4,0,8));
+    coords.push(new BABYLON.Vector3(3, 0, 4));
+    coords.push(new BABYLON.Vector3(2, 0, 6));
+    coords.push(new BABYLON.Vector3(5, 0, 0));
+    coords.push(new BABYLON.Vector3(6, 0, 7));
+    coords.push(new BABYLON.Vector3(-10, 0, 4));
+    coords.push(new BABYLON.Vector3(-6, 0, 8));
+    coords.push(new BABYLON.Vector3(-4, 0, 8));
 
-    scales.push(new BABYLON.Vector3(1,1,1));
-    scales.push(new BABYLON.Vector3(1,2,1));
-    scales.push(new BABYLON.Vector3(2,1,1));
-    scales.push(new BABYLON.Vector3(1,1,2));
-    scales.push(new BABYLON.Vector3(1,2,3));
-    scales.push(new BABYLON.Vector3(2,1,2));
-    scales.push(new BABYLON.Vector3(2,2,1));
-    scales.push(new BABYLON.Vector3(3,3,3));
+    scales.push(new BABYLON.Vector3(1, 1, 1));
+    scales.push(new BABYLON.Vector3(1, 2, 1));
+    scales.push(new BABYLON.Vector3(2, 1, 1));
+    scales.push(new BABYLON.Vector3(1, 1, 2));
+    scales.push(new BABYLON.Vector3(1, 2, 3));
+    scales.push(new BABYLON.Vector3(2, 1, 2));
+    scales.push(new BABYLON.Vector3(2, 2, 1));
+    scales.push(new BABYLON.Vector3(3, 3, 3));
 
-    this.createTestMeshes(colors.length, colors, coords,scales);
+    this.createTestMeshes(colors.length, colors, coords, scales);
 
     let ground = this.createPlane();
     let currentMesh;
@@ -396,7 +415,6 @@ export default class Playground {
         current.z,
         this.focusedObject.orientationScales.z
       );
-
     };
 
     window.addEventListener(
