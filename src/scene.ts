@@ -6,7 +6,7 @@ enum Rotation {
   Rotight,
 }
 
-export class Object {
+class Object {
   private mesh: BABYLON.Mesh;
   public orientationScales: BABYLON.Vector3;
 
@@ -19,7 +19,6 @@ export class Object {
 
   private crateEmptyObject() {
     this.empty = true;
-    this.orientationScales = new BABYLON.Vector3();
   }
 
   public getMesh() {
@@ -27,16 +26,16 @@ export class Object {
   }
 
   public setMesh(mesh: BABYLON.Mesh) {
-    if ((mesh.name = "")) {
+    if (mesh.id == "") {
       return;
     }
 
     this.empty = false;
 
     this.mesh = mesh;
-    this.orientationScales.x =mesh.scaling.x;
-    this.orientationScales.z =mesh.scaling.z;
-    this.orientationScales.y =mesh.scaling.y;
+    if (!this.orientationScales) {
+      this.orientationScales = mesh.scaling.clone();
+    }
   }
 
   public isEmpty() {
@@ -108,12 +107,16 @@ export default class Playground {
 
     if (rotationDegree % 180 == 0) {
       isRightAngle = true;
-      this.focusedObject.orientationScales.x = this.focusedObject.getMesh().scaling.x,
-      this.focusedObject.orientationScales.z = this.focusedObject.getMesh().scaling.z;
+      (this.focusedObject.orientationScales.x =
+        this.focusedObject.getMesh().scaling.x),
+        (this.focusedObject.orientationScales.z =
+          this.focusedObject.getMesh().scaling.z);
     } else if (rotationDegree % 90 == 0) {
       isRightAngle = true;
-      this.focusedObject.orientationScales.x = this.focusedObject.getMesh().scaling.z,
-      this.focusedObject.orientationScales.z = this.focusedObject.getMesh().scaling.x;
+      (this.focusedObject.orientationScales.x =
+        this.focusedObject.getMesh().scaling.z),
+        (this.focusedObject.orientationScales.z =
+          this.focusedObject.getMesh().scaling.x);
     }
 
     if (!isRightAngle) {
@@ -228,18 +231,14 @@ export default class Playground {
     this.focusedObject = new Object();
 
     let cube = new Object();
-    cube.setMesh(this.createCube(
-      "#4A6DE5",
-      new BABYLON.Vector3(0, 0, 0),
-      [1, 1, 1]
-    ));
+    cube.setMesh(
+      this.createCube("#4A6DE5", new BABYLON.Vector3(0, 0, 0), [1, 1, 1])
+    );
     let cube1 = new Object();
 
-    cube1.setMesh(this.createCube(
-      "#4912E5",
-      new BABYLON.Vector3(3, 0, 4),
-      [2, 1, 3]
-    ));
+    cube1.setMesh(
+      this.createCube("#4912E5", new BABYLON.Vector3(5, 0, 0), [2, 1, 3])
+    );
 
     //cube.actionManager = new BABYLON.ActionManager(scene);
 
@@ -342,7 +341,7 @@ export default class Playground {
           ? this.boxSize / 2
           : 0;
 
-      console.log("orOff " +this.focusedObject.orientationScales);
+      console.log("orOff " + this.focusedObject.orientationScales);
       console.log("or" + this.focusedObject.getMesh().scaling);
 
       currentMesh.position.x = this.snap(
