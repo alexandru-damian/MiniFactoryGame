@@ -58,6 +58,8 @@ export default class Playground {
   private zoomSlowness = 5;
   private camera: BABYLON.ArcRotateCamera;
 
+  private objects: Array<Object>;
+
   private focus(currentMesh) {
     if (
       !this.focusedObject.isEmpty() &&
@@ -155,10 +157,8 @@ export default class Playground {
     box.edgesWidth = 1;
     box.edgesColor = new BABYLON.Color4(1, 1, 1, 1);
 
-    console.log("Before" + pos);
     box.position.x = this.snap(pos.x, box.scaling.x);
     box.position.z = this.snap(pos.z, box.scaling.z);
-    console.log("After" + box.position);
     box.position.y = box.scaling.y / 2;
 
     const boxMat = new BABYLON.StandardMaterial("boxMat");
@@ -230,17 +230,19 @@ export default class Playground {
     scene.hoverCursor = "default";
     this.focusedObject = new Object();
 
-    let cube = new Object();
-    cube.setMesh(
+    this.objects = new Array();
+    this.objects.push(new Object());
+    this.objects[0].setMesh(
       this.createCube("#4A6DE5", new BABYLON.Vector3(0, 0, 0), [1, 1, 1])
     );
-    let cube1 = new Object();
-
-    cube1.setMesh(
+    this.objects.push(new Object());
+    this.objects[1].setMesh(
       this.createCube("#4912E5", new BABYLON.Vector3(5, 0, 0), [2, 1, 3])
     );
-
-    //cube.actionManager = new BABYLON.ActionManager(scene);
+    this.objects.push(new Object());
+    this.objects[1].setMesh(
+      this.createCube("#DE2390", new BABYLON.Vector3(-4, 0, 3), [3, 2, 1])
+    );
 
     let ground = this.createPlane();
     let currentMesh;
