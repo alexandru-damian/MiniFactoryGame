@@ -151,20 +151,21 @@ export default class Playground {
     if (
       (this.focusedObject.getMesh().scaling.x +
         this.focusedObject.getMesh().scaling.z) %
-        2 !=
+      2 !=
       0
     ) {
-
-      let orientantionX = this.focusedObject.orientationScales.x % 2?1:-1;
-      let orientantionZ = this.focusedObject.orientationScales.z % 2?-1:1;
+      let orientantionX = this.focusedObject.orientationScales.x % 2 ? 1 : -1;
+      let orientantionZ = this.focusedObject.orientationScales.z % 2 ? -1 : 1;
 
       this.focusedObject.getMesh().position.x = this.snap(
         this.focusedObject.getMesh().position.x,
-        this.focusedObject.orientationScales.x,orientantionX *this.boxSize/2
+        this.focusedObject.orientationScales.x,
+        (orientantionX * this.boxSize) / 2
       );
       this.focusedObject.getMesh().position.z = this.snap(
         this.focusedObject.getMesh().position.z,
-        this.focusedObject.orientationScales.z,orientantionZ *this.boxSize/2
+        this.focusedObject.orientationScales.z,
+        (orientantionZ * this.boxSize) / 2
       );
     }
   }
@@ -182,9 +183,9 @@ export default class Playground {
     box.edgesWidth = 1;
     box.edgesColor = new BABYLON.Color4(1, 1, 1, 1);
 
-    box.position.x = this.snap(pos.x, sizes.x,this.boxSize/2);
-    box.position.z = this.snap(pos.z, sizes.z,this.boxSize/2);
-    box.position.y = sizes.y/2;
+    box.position.x = this.snap(pos.x, sizes.x, this.boxSize / 2);
+    box.position.z = this.snap(pos.z, sizes.z, this.boxSize / 2);
+    box.position.y = sizes.y / 2;
 
     console.log(box.position);
 
@@ -203,16 +204,20 @@ export default class Playground {
 
     const grid = new GridMaterial("groundMaterial");
     ground.material = grid;
-    ground.position = new BABYLON.Vector3(-this.boxSize/2,0, -this.boxSize/2);
+    ground.position = new BABYLON.Vector3(
+      -this.boxSize / 2,
+      0,
+      -this.boxSize / 2
+    );
     grid.mainColor = new BABYLON.Color3(0.09, 0.21, 0.62);
     return ground;
   }
 
   private snap(x: number, size: number, offsetX: number = 0) {
+    let result = Math.trunc(x);
+    let offset = size % 2 == 0 ? offsetX : 0;
 
-    let offset = (size % 2 == 0)? offsetX: 0;
-
-    return Math.trunc(x) - offset;
+    return result - offset;
   }
 
   private onObjectCamera() {
@@ -308,11 +313,8 @@ export default class Playground {
     scales.push(new BABYLON.Vector3(2, 2, 1));
     scales.push(new BABYLON.Vector3(3, 3, 3));
 
-
     ground = this.createPlane();
-    this.createTestMeshes(colors.length, colors, coords,scales);
-    
-    let currentMesh;
+    this.createTestMeshes(colors.length, colors, coords, scales);
 
     let previousPosition;
 
@@ -335,14 +337,33 @@ export default class Playground {
       return null;
     };
 
-    scene.onPointerUp = () => {
-      if (!currentMesh) {
+    scene.onPointerUp = (evt) => {
+      if (this.focusedObject.isEmpty()) {
         return;
+      }
+
+      this.focusedObject.getMesh().position.x = this.snap(
+        this.focusedObject.getMesh().position.x,
+        this.focusedObject.orientationScales.x,
+        this.boxSize / 2
+      );
+      this.focusedObject.getMesh().position.z = this.snap(
+        this.focusedObject.getMesh().position.z,
+        this.focusedObject.orientationScales.z,
+        this.boxSize / 2
+      );
+
+      if (evt.ctrlKey) {
+        this.focusedObject.getMesh().position.y =
+          this.snap(
+            this.focusedObject.getMesh().position.y,
+            this.focusedObject.getMesh().scaling.y,
+            this.boxSize / 2
+          ) + this.boxSize / 2;
       }
 
       if (previousPosition) {
         previousPosition = null;
-        currentMesh = null;
       }
     };
 
@@ -350,6 +371,7 @@ export default class Playground {
       if (evt.button !== 0) {
         return;
       }
+      let currentMesh;
 
       if (pickResult.hit) {
         currentMesh = pickResult.pickedMesh;
@@ -373,18 +395,18 @@ export default class Playground {
         return;
       }
 
-      if (!currentMesh) {
+      if (this.focusedObject.isEmpty()) {
         return;
       }
 
       if (evt.ctrlKey) {
         previousY =
-          currentY != currentMesh.position.y
+          currentY != this.focusedObject.getMesh().position.y
             ? currentY
-            : currentMesh.position.y;
+            : this.focusedObject.getMesh().position.y;
         currentY = currentY - evt.movementY / this.decelarationDeltaY;
         if (Math.abs(currentY - previousY) > 0) {
-          currentMesh.position.y = this.snap(currentY, currentMesh.scaling.y) + this.boxSize/2;
+          this.focusedObject.getMesh().position.y = currentY;
         }
 
         return;
@@ -396,14 +418,8 @@ export default class Playground {
         return;
       }
 
-      currentMesh.position.x = this.snap(
-        current.x,
-        this.focusedObject.orientationScales.x,this.boxSize/2
-      );
-      currentMesh.position.z = this.snap(
-        current.z,
-        this.focusedObject.orientationScales.z,this.boxSize/2
-      );
+      this.focusedObject.getMesh().position.x = current.x;
+      this.focusedObject.getMesh().position.z = current.z;
     };
 
     window.addEventListener(
