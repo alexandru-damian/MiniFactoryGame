@@ -1,6 +1,8 @@
 import * as BABYLON from "@babylonjs/core";
 import { GridMaterial } from "@babylonjs/materials/grid/gridMaterial";
 
+var ground;
+
 enum Rotation {
   RotLeft = 0,
   Rotight,
@@ -185,6 +187,8 @@ export default class Playground {
     box.position.z = this.snap(pos.z, box.scaling.z);
     box.position.y = box.scaling.y / 2;
 
+    box.parent = ground;
+
     const boxMat = new BABYLON.StandardMaterial("boxMat");
     boxMat.diffuseColor = BABYLON.Color3.FromHexString(color);
 
@@ -200,6 +204,7 @@ export default class Playground {
 
     const grid = new GridMaterial("groundMaterial");
     ground.material = grid;
+    ground.position = new BABYLON.Vector3(this.boxSize/2,this.boxSize/2, this.boxSize/2);
     grid.mainColor = new BABYLON.Color3(0.09, 0.21, 0.62);
     return ground;
   }
@@ -309,9 +314,10 @@ export default class Playground {
     scales.push(new BABYLON.Vector3(2, 2, 1));
     scales.push(new BABYLON.Vector3(3, 3, 3));
 
-    this.createTestMeshes(colors.length, colors, coords, scales);
 
-    let ground = this.createPlane();
+    ground = this.createPlane();
+    this.createTestMeshes(colors.length, colors, coords,scales);
+    
     let currentMesh;
 
     let previousPosition;
