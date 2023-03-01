@@ -153,13 +153,16 @@ export default class Playground {
       0
     ) {
 
+      let orientantionX = this.focusedObject.orientationScales.x % 2?1:-1;
+      let orientantionZ = this.focusedObject.orientationScales.z % 2?-1:1;
+
       this.focusedObject.getMesh().position.x = this.snap(
         this.focusedObject.getMesh().position.x,
-        this.focusedObject.orientationScales.x,this.boxSize/2
+        this.focusedObject.orientationScales.x,orientantionX *this.boxSize/2
       );
       this.focusedObject.getMesh().position.z = this.snap(
         this.focusedObject.getMesh().position.z,
-        this.focusedObject.orientationScales.z,this.boxSize/2
+        this.focusedObject.orientationScales.z,orientantionZ *this.boxSize/2
       );
     }
   }
