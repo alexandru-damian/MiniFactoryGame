@@ -1,5 +1,6 @@
 import * as BABYLON from "@babylonjs/core";
 import { GridMaterial } from "@babylonjs/materials/grid/gridMaterial";
+import { BabylonFileLoaderConfiguration } from "babylonjs";
 
 var ground;
 
@@ -343,6 +344,8 @@ export default class Playground {
         return;
       }
 
+      this.focusedObject.getMesh().visibility = 1;
+
       this.focusedObject.getMesh().position.x = this.snapToGrid(
         this.focusedObject.getMesh().position.x,
         this.focusedObject.orientationScales.x,
@@ -385,6 +388,7 @@ export default class Playground {
         }
 
         this.focus(currentMesh);
+        this.focusedObject.getMesh().visibility = .5;
         this.onObjectCamera();
 
         previousPosition = currentMesh.position;
