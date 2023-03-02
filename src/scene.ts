@@ -1,8 +1,5 @@
 import * as BABYLON from "@babylonjs/core";
 import { GridMaterial } from "@babylonjs/materials/grid/gridMaterial";
-import { BabylonFileLoaderConfiguration } from "babylonjs";
-
-var ground;
 
 enum Rotation {
   RotLeft = 0,
@@ -316,7 +313,7 @@ export default class Playground {
     scales.push(new BABYLON.Vector3(2, 2, 1));
     scales.push(new BABYLON.Vector3(3, 3, 3));
 
-    ground = this.createPlane();
+    let ground = this.createPlane();
     this.createTestMeshes(colors.length, colors, coords, scales);
 
     let previousPosition;
@@ -373,8 +370,6 @@ export default class Playground {
           ) + this.boxSize / 2;
       }
 
-      console.log("After snap: "+this.focusedObject.getMesh().position);
-
       if (previousPosition) {
         previousPosition = null;
       }
@@ -420,7 +415,6 @@ export default class Playground {
             : this.focusedObject.getMesh().position.y;
         currentY =  currentY - evt.movementY / this.decelarationDeltaY;
         if (Math.abs(currentY - previousY) > 0) {
-          console.log(scene.pointerY);
           this.focusedObject.getMesh().position.y = currentY;
         }
 
@@ -436,7 +430,6 @@ export default class Playground {
       this.focusedObject.getMesh().position.x = currentGroundPos.x;
       this.focusedObject.getMesh().position.z = currentGroundPos.z;
 
-      console.log(this.focusedObject.getMesh().position);
     };
 
     window.addEventListener(
