@@ -60,7 +60,7 @@ export default class Playground {
   private readonly boxSize = 1;
 
   private readonly spaceBoxSize = 30;
-  private readonly decelarationDeltaY = 32;
+  private readonly decelarationDeltaY = 64;
 
   private cameraRadius = 20;
 
@@ -188,8 +188,6 @@ export default class Playground {
     box.position.z = this.snapToGrid(pos.z, sizes.z, this.boxSize / 2);
     box.position.y = sizes.y / 2;
 
-    console.log(box.position);
-
     const boxMat = new BABYLON.StandardMaterial("boxMat");
     boxMat.diffuseColor = BABYLON.Color3.FromHexString(color);
 
@@ -214,12 +212,15 @@ export default class Playground {
     return ground;
   }
 
-  private snapToGrid(x: number, size: number, offsetX: number = 0) {
+  private snapToGrid(x: number, size: number, offsetX: number = 0, snapToY: boolean = false) {
+    let result = Math.round(x);
+
     if (size % 2 == 0) {
-      return Math.trunc(x) + offsetX;
+      let sign = x<0?-1:1;
+      return Math.trunc(x) + offsetX * sign;
     }
 
-    return Math.round(x);
+    return result;
   }
 
   private onObjectCamera() {
@@ -358,13 +359,21 @@ export default class Playground {
       );
 
       if (evt.ctrlKey) {
+        let snapWeightY = 1;
+      if(scene.pointerY >= canvas.height/2)
+      {
+        snapWeightY = -1;
+      }
+
         this.focusedObject.getMesh().position.y =
           this.snapToGrid(
             this.focusedObject.getMesh().position.y,
             this.focusedObject.getMesh().scaling.y,
-            this.boxSize / 2
+            this.boxSize / 2 * snapWeightY,true
           ) + this.boxSize / 2;
       }
+
+      console.log("After snap: "+this.focusedObject.getMesh().position);
 
       if (previousPosition) {
         previousPosition = null;
@@ -409,22 +418,23 @@ export default class Playground {
           currentY != this.focusedObject.getMesh().position.y
             ? currentY
             : this.focusedObject.getMesh().position.y;
-        currentY = currentY - evt.movementY / this.decelarationDeltaY;
+        currentY =  currentY - evt.movementY / this.decelarationDeltaY;
         if (Math.abs(currentY - previousY) > 0) {
+          console.log(scene.pointerY);
           this.focusedObject.getMesh().position.y = currentY;
         }
 
         return;
       }
 
-      let current = getGroundPosition();
+      let currentGroundPos = getGroundPosition() as BABYLON.Vector3;
 
-      if (!current) {
+      if (!currentGroundPos) {
         return;
       }
 
-      this.focusedObject.getMesh().position.x = current.x;
-      this.focusedObject.getMesh().position.z = current.z;
+      this.focusedObject.getMesh().position.x = currentGroundPos.x;
+      this.focusedObject.getMesh().position.z = currentGroundPos.z;
 
       console.log(this.focusedObject.getMesh().position);
     };
