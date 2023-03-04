@@ -1,6 +1,7 @@
 import * as BABYLON from "@babylonjs/core";
 import { GridMaterial } from "@babylonjs/materials/grid/gridMaterial";
 
+import { Object } from "./components/object";
 enum Rotation {
   RotLeft = 0,
   Rotight,
@@ -27,7 +28,7 @@ export default class Playground {
   private focus(currentMesh) {
     if (
       !this.focusedObject.isEmpty() &&
-      currentMesh != this.focusedObject.getMesh()
+      currentMesh != this.focusedObject.mesh
     ) {
       this.unfocus();
     }
@@ -38,15 +39,15 @@ export default class Playground {
     }
 
     this.focusedObject = currentObject;
-    this.focusedObject.getMesh().enableEdgesRendering();
-    this.hl.addMesh(this.focusedObject.getMesh(), BABYLON.Color3.White(), true);
+    this.focusedObject.mesh.enableEdgesRendering();
+    this.hl.addMesh(this.focusedObject.mesh, BABYLON.Color3.White(), true);
   }
 
   private unfocus() {
-    this.hl.removeMesh(this.focusedObject.getMesh());
-    this.focusedObject.getMesh().disableEdgesRendering();
+    this.hl.removeMesh(this.focusedObject.mesh);
+    this.focusedObject.mesh.disableEdgesRendering();
     this.objects.set(
-      Number(this.focusedObject.getMesh().id),
+      Number(this.focusedObject.mesh.id),
       this.focusedObject.cloneObjProperties()
     );
     this.focusedObject = new Object();
@@ -60,17 +61,17 @@ export default class Playground {
       return;
     }
 
-    if (Math.abs(this.focusedObject.getMesh().rotation.y) >= 2 * Math.PI) {
-      this.focusedObject.getMesh().rotation.y = 0;
+    if (Math.abs(this.focusedObject.mesh.rotation.y) >= 2 * Math.PI) {
+      this.focusedObject.mesh.rotation.y = 0;
     }
 
     switch (direction) {
       case Rotation.RotLeft: {
-        this.focusedObject.getMesh().rotation.y += amount;
+        this.focusedObject.mesh.rotation.y += amount;
         break;
       }
       case Rotation.Rotight: {
-        this.focusedObject.getMesh().rotation.y -= amount;
+        this.focusedObject.mesh.rotation.y -= amount;
         break;
       }
       default: {
@@ -78,21 +79,21 @@ export default class Playground {
       }
     }
     let rotationDegree = Math.abs(
-      BABYLON.Tools.ToDegrees(this.focusedObject.getMesh().rotation.y)
+      BABYLON.Tools.ToDegrees(this.focusedObject.mesh.rotation.y)
     );
 
     if (rotationDegree % 180 == 0) {
       isRightAngle = true;
-      this.focusedObject.orientationScales.x =
-        this.focusedObject.getMesh().scaling.x;
-      this.focusedObject.orientationScales.z =
-        this.focusedObject.getMesh().scaling.z;
+      this.focusedObject._orientationScaling.x =
+        this.focusedObject.mesh.scaling.x;
+      this.focusedObject._orientationScaling.z =
+        this.focusedObject.mesh.scaling.z;
     } else if (rotationDegree % 90 == 0) {
       isRightAngle = true;
-      this.focusedObject.orientationScales.x =
-        this.focusedObject.getMesh().scaling.z;
-      this.focusedObject.orientationScales.z =
-        this.focusedObject.getMesh().scaling.x;
+      this.focusedObject._orientationScaling.x =
+        this.focusedObject.mesh.scaling.z;
+      this.focusedObject._orientationScaling.z =
+        this.focusedObject.mesh.scaling.x;
     }
 
     if (!isRightAngle) {
@@ -100,22 +101,21 @@ export default class Playground {
     }
 
     if (
-      (this.focusedObject.getMesh().scaling.x +
-        this.focusedObject.getMesh().scaling.z) %
-      2 !=
+      (this.focusedObject.mesh.scaling.x + this.focusedObject.mesh.scaling.z) %
+        2 !=
       0
     ) {
-      let orientantionX = this.focusedObject.orientationScales.x % 2 ? 1 : -1;
-      let orientantionZ = this.focusedObject.orientationScales.z % 2 ? 1 : -1;
+      let orientantionX = this.focusedObject._orientationScaling.x % 2 ? 1 : -1;
+      let orientantionZ = this.focusedObject._orientationScaling.z % 2 ? 1 : -1;
 
-      this.focusedObject.getMesh().position.x = this.snapToGrid(
-        this.focusedObject.getMesh().position.x,
-        this.focusedObject.orientationScales.x,
+      this.focusedObject.mesh.position.x = this.snapToGrid(
+        this.focusedObject.mesh.position.x,
+        this.focusedObject._orientationScaling.x,
         (orientantionX * this.boxSize) / 2
       );
-      this.focusedObject.getMesh().position.z = this.snapToGrid(
-        this.focusedObject.getMesh().position.z,
-        this.focusedObject.orientationScales.z,
+      this.focusedObject.mesh.position.z = this.snapToGrid(
+        this.focusedObject.mesh.position.z,
+        this.focusedObject._orientationScaling.z,
         (orientantionZ * this.boxSize) / 2
       );
     }
@@ -162,11 +162,16 @@ export default class Playground {
     return ground;
   }
 
-  private snapToGrid(x: number, size: number, offsetX: number = 0, snapToY: boolean = false) {
+  private snapToGrid(
+    x: number,
+    size: number,
+    offsetX: number = 0,
+    snapToY: boolean = false
+  ) {
     let result = Math.round(x);
 
     if (size % 2 == 0) {
-      let sign = x<0?-1:1;
+      let sign = x < 0 ? -1 : 1;
       return Math.trunc(x) + offsetX * sign;
     }
 
@@ -191,16 +196,14 @@ export default class Playground {
   ) {
     for (let index = 0; index < size; ++index) {
       this.objects.set(this.sizeObjects, new Object());
-      this.objects
-        .get(this.sizeObjects++)
-        ?.setMesh(
-          this.createCube(
-            String(this.sizeObjects - 1),
-            colors[index],
-            coords[index],
-            scales[index]
-          )
-        );
+      let obj = this.objects.get(this.sizeObjects++)!;
+      
+      obj.mesh= this.createCube(
+        String(this.sizeObjects - 1),
+        colors[index],
+        coords[index],
+        scales[index]
+      )!;
     }
   }
 
@@ -295,32 +298,33 @@ export default class Playground {
         return;
       }
 
-      this.focusedObject.getMesh().visibility = 1;
+      this.focusedObject.mesh.visibility = 1;
 
-      this.focusedObject.getMesh().position.x = this.snapToGrid(
-        this.focusedObject.getMesh().position.x,
-        this.focusedObject.orientationScales.x,
-        this.boxSize/2
+      this.focusedObject.mesh.position.x = this.snapToGrid(
+        this.focusedObject.mesh.position.x,
+        this.focusedObject._orientationScaling.x,
+        this.boxSize / 2
       );
-      this.focusedObject.getMesh().position.z = this.snapToGrid(
-        this.focusedObject.getMesh().position.z,
-        this.focusedObject.orientationScales.z,
-        this.boxSize/2
+      this.focusedObject.mesh.position.z = this.snapToGrid(
+        this.focusedObject.mesh.position.z,
+        this.focusedObject._orientationScaling.z,
+        this.boxSize / 2
       );
 
       if (evt.ctrlKey) {
         let snapWeightY = 1;
-      if(scene.pointerY >= canvas.height/2)
-      {
-        snapWeightY = -1;
-      }
+        if (scene.pointerY >= canvas.height / 2) {
+          snapWeightY = -1;
+        }
 
-        this.focusedObject.getMesh().position.y =
+        this.focusedObject.mesh.position.y =
           this.snapToGrid(
-            this.focusedObject.getMesh().position.y,
-            this.focusedObject.getMesh().scaling.y,
-            this.boxSize / 2 * snapWeightY,true
-          ) + this.boxSize / 2;
+            this.focusedObject.mesh.position.y,
+            this.focusedObject.mesh.scaling.y,
+            (this.boxSize / 2) * snapWeightY,
+            true
+          ) +
+          this.boxSize / 2;
       }
 
       if (previousPosition) {
@@ -345,7 +349,7 @@ export default class Playground {
         }
 
         this.focus(currentMesh);
-        this.focusedObject.getMesh().visibility = .5;
+        this.focusedObject.mesh.visibility = 0.5;
         this.onObjectCamera();
 
         previousPosition = currentMesh.position;
@@ -363,12 +367,12 @@ export default class Playground {
 
       if (evt.ctrlKey) {
         previousY =
-          currentY != this.focusedObject.getMesh().position.y
+          currentY != this.focusedObject.mesh.position.y
             ? currentY
-            : this.focusedObject.getMesh().position.y;
-        currentY =  currentY - evt.movementY / this.decelarationDeltaY;
+            : this.focusedObject.mesh.position.y;
+        currentY = currentY - evt.movementY / this.decelarationDeltaY;
         if (Math.abs(currentY - previousY) > 0) {
-          this.focusedObject.getMesh().position.y = currentY;
+          this.focusedObject.mesh.position.y = currentY;
         }
 
         return;
@@ -380,9 +384,8 @@ export default class Playground {
         return;
       }
 
-      this.focusedObject.getMesh().position.x = currentGroundPos.x;
-      this.focusedObject.getMesh().position.z = currentGroundPos.z;
-
+      this.focusedObject.mesh.position.x = currentGroundPos.x;
+      this.focusedObject.mesh.position.z = currentGroundPos.z;
     };
 
     window.addEventListener(

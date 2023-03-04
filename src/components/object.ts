@@ -1,11 +1,11 @@
 import {Mesh} from '@babylonjs/core/Meshes/mesh'
 import {Vector3} from '@babylonjs/core/'
 
-class Object {
-    private mesh: Mesh;
-    public orientationScales: Vector3;
+export class Object {
+    private _mesh: Mesh;
+    public _orientationScaling: Vector3;
   
-    private empty: boolean;
+    private _empty: boolean;
   
     constructor() {
       this.crateEmptyObject();
@@ -13,37 +13,37 @@ class Object {
     }
   
     private crateEmptyObject() {
-      this.empty = true;
+      this._empty = true;
     }
   
-    public getMesh() {
-      return this.mesh;
+    public get mesh() {
+      return this._mesh;
     }
   
-    public setMesh(mesh: Mesh) {
+    public set mesh(mesh: Mesh) {
       if (mesh.id == "") {
         return;
       }
   
-      this.empty = false;
+      this._empty = false;
   
-      this.mesh = mesh;
-      if (!this.orientationScales) {
-        this.orientationScales = mesh.scaling.clone();
+      this._mesh = mesh;
+      if (!this._orientationScaling) {
+        this._orientationScaling = mesh.scaling.clone();
       }
     }
   
     public cloneObjProperties(): Object {
       let newObj = new Object();
   
-      newObj.empty = this.empty;
-      newObj.mesh = this.mesh;
-      newObj.orientationScales = this.orientationScales.clone();
+      newObj._empty = this._empty;
+      newObj._mesh = this._mesh;
+      newObj._orientationScaling = this._orientationScaling.clone();
   
       return newObj;
     }
   
     public isEmpty() {
-      return this.empty;
+      return this._empty;
     }
   }
