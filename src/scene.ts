@@ -6,53 +6,6 @@ enum Rotation {
   Rotight,
 }
 
-class Object {
-  private mesh: BABYLON.Mesh;
-  public orientationScales: BABYLON.Vector3;
-
-  private empty: boolean;
-
-  constructor() {
-    this.crateEmptyObject();
-    return;
-  }
-
-  private crateEmptyObject() {
-    this.empty = true;
-  }
-
-  public getMesh() {
-    return this.mesh;
-  }
-
-  public setMesh(mesh: BABYLON.Mesh) {
-    if (mesh.id == "") {
-      return;
-    }
-
-    this.empty = false;
-
-    this.mesh = mesh;
-    if (!this.orientationScales) {
-      this.orientationScales = mesh.scaling.clone();
-    }
-  }
-
-  public cloneObjProperties(): Object {
-    let newObj = new Object();
-
-    newObj.empty = this.empty;
-    newObj.mesh = this.mesh;
-    newObj.orientationScales = this.orientationScales.clone();
-
-    return newObj;
-  }
-
-  public isEmpty() {
-    return this.empty;
-  }
-}
-
 export default class Playground {
   private readonly boxSize = 1;
 
