@@ -1,6 +1,8 @@
 import * as BABYLON from "@babylonjs/core";
 import { GridMaterial } from "@babylonjs/materials/grid/gridMaterial";
 
+var ground;
+
 enum Rotation {
   RotLeft = 0,
   Rotight,
@@ -152,18 +154,17 @@ export default class Playground {
         2 !=
       0
     ) {
-      let offsetX =
-        this.focusedObject.orientationScales.x % 2 != 0 ? this.boxSize / 2 : 0;
-      let offsetZ =
-        this.focusedObject.orientationScales.z % 2 != 0 ? this.boxSize / 2 : 0;
 
-      this.focusedObject.getMesh().position.x = this.getClosestCell(
+      let orientantionX = this.focusedObject.orientationScales.x % 2?1:-1;
+      let orientantionZ = this.focusedObject.orientationScales.z % 2?-1:1;
+
+      this.focusedObject.getMesh().position.x = this.snap(
         this.focusedObject.getMesh().position.x,
-        offsetX
+        this.focusedObject.orientationScales.x,orientantionX *this.boxSize/2
       );
-      this.focusedObject.getMesh().position.z = this.getClosestCell(
+      this.focusedObject.getMesh().position.z = this.snap(
         this.focusedObject.getMesh().position.z,
-        offsetZ
+        this.focusedObject.orientationScales.z,orientantionZ *this.boxSize/2
       );
     }
   }
@@ -181,9 +182,11 @@ export default class Playground {
     box.edgesWidth = 1;
     box.edgesColor = new BABYLON.Color4(1, 1, 1, 1);
 
-    box.position.x = this.snap(pos.x, box.scaling.x);
-    box.position.z = this.snap(pos.z, box.scaling.z);
-    box.position.y = box.scaling.y / 2;
+    box.position.x = this.snap(pos.x, sizes.x,this.boxSize/2);
+    box.position.z = this.snap(pos.z, sizes.z,this.boxSize/2);
+    box.position.y = sizes.y/2;
+
+    console.log(box.position);
 
     const boxMat = new BABYLON.StandardMaterial("boxMat");
     boxMat.diffuseColor = BABYLON.Color3.FromHexString(color);
@@ -200,20 +203,16 @@ export default class Playground {
 
     const grid = new GridMaterial("groundMaterial");
     ground.material = grid;
+    ground.position = new BABYLON.Vector3(-this.boxSize/2,0, -this.boxSize/2);
     grid.mainColor = new BABYLON.Color3(0.09, 0.21, 0.62);
     return ground;
   }
 
-  private getClosestCell(x: number, offsetX: number = 0) {
-    return (
-      (Math.abs(x - Math.trunc(x)) > 0 ? Math.ceil(x) : Math.floor(x)) - offsetX
-    );
-  }
-
   private snap(x: number, size: number, offsetX: number = 0) {
-    let newX = this.getClosestCell(x, offsetX);
 
-    return newX + size / 2;
+    let offset = (size % 2 == 0)? offsetX: 0;
+
+    return Math.trunc(x) - offset;
   }
 
   private onObjectCamera() {
@@ -309,9 +308,10 @@ export default class Playground {
     scales.push(new BABYLON.Vector3(2, 2, 1));
     scales.push(new BABYLON.Vector3(3, 3, 3));
 
-    this.createTestMeshes(colors.length, colors, coords, scales);
 
-    let ground = this.createPlane();
+    ground = this.createPlane();
+    this.createTestMeshes(colors.length, colors, coords,scales);
+    
     let currentMesh;
 
     let previousPosition;
@@ -384,7 +384,7 @@ export default class Playground {
             : currentMesh.position.y;
         currentY = currentY - evt.movementY / this.decelarationDeltaY;
         if (Math.abs(currentY - previousY) > 0) {
-          currentMesh.position.y = this.snap(currentY, currentMesh.scaling.y);
+          currentMesh.position.y = this.snap(currentY, currentMesh.scaling.y) + this.boxSize/2;
         }
 
         return;
@@ -396,24 +396,13 @@ export default class Playground {
         return;
       }
 
-      let offsetX =
-        this.focusedObject.orientationScales.x !=
-        this.focusedObject.getMesh().scaling.x
-          ? this.boxSize / 2
-          : 0;
-      let offsetZ =
-        this.focusedObject.orientationScales.z !=
-        this.focusedObject.getMesh().scaling.z
-          ? this.boxSize / 2
-          : 0;
-
       currentMesh.position.x = this.snap(
         current.x,
-        this.focusedObject.orientationScales.x
+        this.focusedObject.orientationScales.x,this.boxSize/2
       );
       currentMesh.position.z = this.snap(
         current.z,
-        this.focusedObject.orientationScales.z
+        this.focusedObject.orientationScales.z,this.boxSize/2
       );
     };
 
