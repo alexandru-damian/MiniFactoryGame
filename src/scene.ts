@@ -2,18 +2,16 @@ import * as BABYLON from "@babylonjs/core";
 import { GridMaterial } from "@babylonjs/materials/grid/gridMaterial";
 
 import { Object } from "./components/object";
+import {GameConfig} from "./config/gameConfig";
+import {CameraConfig} from "./config/cameraConfig";
+
 enum Rotation {
   RotLeft = 0,
   Rotight,
 }
 
 export default class Playground {
-  private readonly boxSize = 1;
-
-  private readonly spaceBoxSize = 30;
   private readonly decelarationDeltaY = 64;
-
-  private cameraRadius = 20;
 
   private hl: BABYLON.HighlightLayer;
 
@@ -111,12 +109,12 @@ export default class Playground {
       this.focusedObject.mesh.position.x = this.snapToGrid(
         this.focusedObject.mesh.position.x,
         this.focusedObject._orientationScaling.x,
-        (orientantionX * this.boxSize) / 2
+        (orientantionX * GameConfig._SIZE_GRID_CELL) / 2
       );
       this.focusedObject.mesh.position.z = this.snapToGrid(
         this.focusedObject.mesh.position.z,
         this.focusedObject._orientationScaling.z,
-        (orientantionZ * this.boxSize) / 2
+        (orientantionZ * GameConfig._SIZE_GRID_CELL) / 2
       );
     }
   }
@@ -134,8 +132,8 @@ export default class Playground {
     box.edgesWidth = 1;
     box.edgesColor = new BABYLON.Color4(1, 1, 1, 1);
 
-    box.position.x = this.snapToGrid(pos.x, sizes.x, this.boxSize / 2);
-    box.position.z = this.snapToGrid(pos.z, sizes.z, this.boxSize / 2);
+    box.position.x = this.snapToGrid(pos.x, sizes.x, GameConfig._SIZE_GRID_CELL / 2);
+    box.position.z = this.snapToGrid(pos.z, sizes.z, GameConfig._SIZE_GRID_CELL / 2);
     box.position.y = sizes.y / 2;
 
     const boxMat = new BABYLON.StandardMaterial("boxMat");
@@ -147,16 +145,16 @@ export default class Playground {
 
   private createPlane(): BABYLON.Mesh {
     const ground = BABYLON.MeshBuilder.CreateGround("ground", {
-      width: this.spaceBoxSize,
-      height: this.spaceBoxSize,
+      width: GameConfig._SIZE_GRID,
+      height: GameConfig._SIZE_GRID,
     });
 
     const grid = new GridMaterial("groundMaterial");
     ground.material = grid;
     ground.position = new BABYLON.Vector3(
-      -this.boxSize / 2,
+      -GameConfig._SIZE_GRID_CELL / 2,
       0,
-      -this.boxSize / 2
+      -GameConfig._SIZE_GRID_CELL / 2
     );
     grid.mainColor = new BABYLON.Color3(0.09, 0.21, 0.62);
     return ground;
@@ -214,10 +212,11 @@ export default class Playground {
     // This creates a basic Babylon Scene object (non-mesh)
     var scene = new BABYLON.Scene(engine);
     this.camera = new BABYLON.ArcRotateCamera(
-      "camera",
-      -Math.PI / 2,
-      Math.PI / 4,
-      this.cameraRadius,
+      CameraConfig._NAME,
+      CameraConfig._PITCH,
+      CameraConfig._YAW,
+      CameraConfig._CAMERA_RADIUS
+      ,
       new BABYLON.Vector3(0, 0, 0)
     );
     this.camera.attachControl(canvas, true);
@@ -303,12 +302,12 @@ export default class Playground {
       this.focusedObject.mesh.position.x = this.snapToGrid(
         this.focusedObject.mesh.position.x,
         this.focusedObject._orientationScaling.x,
-        this.boxSize / 2
+        GameConfig._SIZE_GRID_CELL / 2
       );
       this.focusedObject.mesh.position.z = this.snapToGrid(
         this.focusedObject.mesh.position.z,
         this.focusedObject._orientationScaling.z,
-        this.boxSize / 2
+        GameConfig._SIZE_GRID_CELL / 2
       );
 
       if (evt.ctrlKey) {
@@ -321,10 +320,10 @@ export default class Playground {
           this.snapToGrid(
             this.focusedObject.mesh.position.y,
             this.focusedObject.mesh.scaling.y,
-            (this.boxSize / 2) * snapWeightY,
+            (GameConfig._SIZE_GRID_CELL / 2) * snapWeightY,
             true
           ) +
-          this.boxSize / 2;
+          GameConfig._SIZE_GRID_CELL / 2;
       }
 
       if (previousPosition) {
