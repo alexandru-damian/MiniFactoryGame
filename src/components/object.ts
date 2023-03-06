@@ -1,8 +1,8 @@
-import { Mesh } from "@babylonjs/core/Meshes/mesh";
+import { IPointerEvent, Mesh, Scene } from "@babylonjs/core";
 import { Vector3, Color3, Tools } from "@babylonjs/core/";
 import { HighlightLayer } from "@babylonjs/core";
 import { GameConfig } from "../config/gameConfig";
-import * as utils from "./utils"
+import * as utils from "./utils";
 
 export enum Rotation {
   RLEFT = 0,
@@ -18,12 +18,10 @@ export class Object {
 
   constructor() {
     this.crateEmptyObject();
-    return;
   }
 
   private crateEmptyObject() {
     this._empty = true;
-
     this._highlightLayer = new HighlightLayer("hl");
   }
 
@@ -138,10 +136,13 @@ export class Object {
   }
 
   public setY(z: number, offset: number = GameConfig._SIZE_GRID_CELL) {
-    this._mesh.position.y = utils.snapToGrid(
-      this._mesh.position.y,
-      this._orientationScaling.y,
-      offset / 2,true
-    ) + GameConfig._SIZE_GRID_CELL/2;
+    this._mesh.position.y =
+      utils.snapToGrid(
+        this._mesh.position.y,
+        this._orientationScaling.y,
+        offset / 2,
+        true
+      ) +
+      GameConfig._SIZE_GRID_CELL / 2;
   }
 }

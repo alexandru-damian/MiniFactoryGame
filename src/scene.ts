@@ -214,7 +214,10 @@ export default class Playground {
           snapWeightY = -1;
         }
 
-        this._currentObject.setY(this._currentObject.mesh.position.y, GameConfig._SIZE_GRID_CELL * snapWeightY);
+        this._currentObject.setY(
+          this._currentObject.mesh.position.y,
+          GameConfig._SIZE_GRID_CELL
+        );
       }
 
       if (previousPosition) {
