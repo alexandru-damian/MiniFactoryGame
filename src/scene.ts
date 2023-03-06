@@ -1,21 +1,15 @@
 import * as BABYLON from "@babylonjs/core";
 import { GridMaterial } from "@babylonjs/materials/grid/gridMaterial";
 
-import { Object } from "./components/object";
-import {GameConfig} from "./config/gameConfig";
-import {CameraConfig} from "./config/cameraConfig";
-
-enum Rotation {
-  RotLeft = 0,
-  Rotight,
-}
+import { Object, Rotation } from "./components/object";
+import { GameConfig } from "./config/gameConfig";
+import { CameraConfig } from "./config/cameraConfig";
+import * as utils from "./components/utils"
 
 export default class Playground {
   private readonly decelarationDeltaY = 64;
 
-  private hl: BABYLON.HighlightLayer;
-
-  private focusedObject: Object;
+  private _currentObject: Object;
 
   private zoomSlowness = 5;
   private camera: BABYLON.ArcRotateCamera;
@@ -25,98 +19,22 @@ export default class Playground {
 
   private focus(currentMesh) {
     if (
-      !this.focusedObject.isEmpty() &&
-      currentMesh != this.focusedObject.mesh
+      !this._currentObject.isEmpty() &&
+      currentMesh != this._currentObject.mesh
     ) {
       this.unfocus();
     }
-    let currentObject: Object = this.objects.get(Number(currentMesh.id))!;
-
-    if (!currentObject) {
-      return;
-    }
-
-    this.focusedObject = currentObject;
-    this.focusedObject.mesh.enableEdgesRendering();
-    this.hl.addMesh(this.focusedObject.mesh, BABYLON.Color3.White(), true);
+    this._currentObject = this.objects.get(Number(currentMesh.id))!;
+    this._currentObject.onFocus();
   }
 
   private unfocus() {
-    this.hl.removeMesh(this.focusedObject.mesh);
-    this.focusedObject.mesh.disableEdgesRendering();
+    this._currentObject.offFocus();
     this.objects.set(
-      Number(this.focusedObject.mesh.id),
-      this.focusedObject.cloneObjProperties()
+      Number(this._currentObject.mesh.id),
+      this._currentObject.cloneObjProperties()
     );
-    this.focusedObject = new Object();
-  }
-
-  private rotate(direction: Rotation) {
-    //Rotate object with 45 degrees
-    const amount = Math.PI / 4;
-    let isRightAngle = false;
-    if (this.focusedObject.isEmpty()) {
-      return;
-    }
-
-    if (Math.abs(this.focusedObject.mesh.rotation.y) >= 2 * Math.PI) {
-      this.focusedObject.mesh.rotation.y = 0;
-    }
-
-    switch (direction) {
-      case Rotation.RotLeft: {
-        this.focusedObject.mesh.rotation.y += amount;
-        break;
-      }
-      case Rotation.Rotight: {
-        this.focusedObject.mesh.rotation.y -= amount;
-        break;
-      }
-      default: {
-        break;
-      }
-    }
-    let rotationDegree = Math.abs(
-      BABYLON.Tools.ToDegrees(this.focusedObject.mesh.rotation.y)
-    );
-
-    if (rotationDegree % 180 == 0) {
-      isRightAngle = true;
-      this.focusedObject._orientationScaling.x =
-        this.focusedObject.mesh.scaling.x;
-      this.focusedObject._orientationScaling.z =
-        this.focusedObject.mesh.scaling.z;
-    } else if (rotationDegree % 90 == 0) {
-      isRightAngle = true;
-      this.focusedObject._orientationScaling.x =
-        this.focusedObject.mesh.scaling.z;
-      this.focusedObject._orientationScaling.z =
-        this.focusedObject.mesh.scaling.x;
-    }
-
-    if (!isRightAngle) {
-      return;
-    }
-
-    if (
-      (this.focusedObject.mesh.scaling.x + this.focusedObject.mesh.scaling.z) %
-        2 !=
-      0
-    ) {
-      let orientantionX = this.focusedObject._orientationScaling.x % 2 ? 1 : -1;
-      let orientantionZ = this.focusedObject._orientationScaling.z % 2 ? 1 : -1;
-
-      this.focusedObject.mesh.position.x = this.snapToGrid(
-        this.focusedObject.mesh.position.x,
-        this.focusedObject._orientationScaling.x,
-        (orientantionX * GameConfig._SIZE_GRID_CELL) / 2
-      );
-      this.focusedObject.mesh.position.z = this.snapToGrid(
-        this.focusedObject.mesh.position.z,
-        this.focusedObject._orientationScaling.z,
-        (orientantionZ * GameConfig._SIZE_GRID_CELL) / 2
-      );
-    }
+    this._currentObject = new Object();
   }
 
   private createCube(
@@ -132,8 +50,16 @@ export default class Playground {
     box.edgesWidth = 1;
     box.edgesColor = new BABYLON.Color4(1, 1, 1, 1);
 
-    box.position.x = this.snapToGrid(pos.x, sizes.x, GameConfig._SIZE_GRID_CELL / 2);
-    box.position.z = this.snapToGrid(pos.z, sizes.z, GameConfig._SIZE_GRID_CELL / 2);
+    box.position.x = utils.snapToGrid(
+      pos.x,
+      sizes.x,
+      GameConfig._SIZE_GRID_CELL / 2
+    );
+    box.position.z = utils.snapToGrid(
+      pos.z,
+      sizes.z,
+      GameConfig._SIZE_GRID_CELL / 2
+    );
     box.position.y = sizes.y / 2;
 
     const boxMat = new BABYLON.StandardMaterial("boxMat");
@@ -160,22 +86,6 @@ export default class Playground {
     return ground;
   }
 
-  private snapToGrid(
-    x: number,
-    size: number,
-    offsetX: number = 0,
-    snapToY: boolean = false
-  ) {
-    let result = Math.round(x);
-
-    if (size % 2 == 0) {
-      let sign = x < 0 ? -1 : 1;
-      return Math.trunc(x) + offsetX * sign;
-    }
-
-    return result;
-  }
-
   private onObjectCamera() {
     this.camera.detachControl();
     this.camera.lowerRadiusLimit = this.camera.upperRadiusLimit =
@@ -195,8 +105,8 @@ export default class Playground {
     for (let index = 0; index < size; ++index) {
       this.objects.set(this.sizeObjects, new Object());
       let obj = this.objects.get(this.sizeObjects++)!;
-      
-      obj.mesh= this.createCube(
+
+      obj.mesh = this.createCube(
         String(this.sizeObjects - 1),
         colors[index],
         coords[index],
@@ -215,8 +125,7 @@ export default class Playground {
       CameraConfig._NAME,
       CameraConfig._PITCH,
       CameraConfig._YAW,
-      CameraConfig._CAMERA_RADIUS
-      ,
+      CameraConfig._CAMERA_RADIUS,
       new BABYLON.Vector3(0, 0, 0)
     );
     this.camera.attachControl(canvas, true);
@@ -227,12 +136,10 @@ export default class Playground {
       new BABYLON.Vector3(1, 1, 0),
       scene
     );
-
-    this.hl = new BABYLON.HighlightLayer("hl", scene);
     light.intensity = 1;
 
     scene.hoverCursor = "default";
-    this.focusedObject = new Object();
+    this._currentObject = new Object();
 
     this.objects = new Map<number, Object>();
     this.sizeObjects = this.objects.size;
@@ -293,22 +200,13 @@ export default class Playground {
     };
 
     scene.onPointerUp = (evt) => {
-      if (this.focusedObject.isEmpty()) {
+      if (this._currentObject.isEmpty()) {
         return;
       }
 
-      this.focusedObject.mesh.visibility = 1;
-
-      this.focusedObject.mesh.position.x = this.snapToGrid(
-        this.focusedObject.mesh.position.x,
-        this.focusedObject._orientationScaling.x,
-        GameConfig._SIZE_GRID_CELL / 2
-      );
-      this.focusedObject.mesh.position.z = this.snapToGrid(
-        this.focusedObject.mesh.position.z,
-        this.focusedObject._orientationScaling.z,
-        GameConfig._SIZE_GRID_CELL / 2
-      );
+      this._currentObject.mesh.visibility = 1;
+      this._currentObject.setX(this._currentObject.mesh.position.x);
+      this._currentObject.setZ(this._currentObject.mesh.position.z);
 
       if (evt.ctrlKey) {
         let snapWeightY = 1;
@@ -316,14 +214,7 @@ export default class Playground {
           snapWeightY = -1;
         }
 
-        this.focusedObject.mesh.position.y =
-          this.snapToGrid(
-            this.focusedObject.mesh.position.y,
-            this.focusedObject.mesh.scaling.y,
-            (GameConfig._SIZE_GRID_CELL / 2) * snapWeightY,
-            true
-          ) +
-          GameConfig._SIZE_GRID_CELL / 2;
+        this._currentObject.setY(this._currentObject.mesh.position.y, GameConfig._SIZE_GRID_CELL * snapWeightY);
       }
 
       if (previousPosition) {
@@ -340,7 +231,7 @@ export default class Playground {
       if (pickResult.hit) {
         currentMesh = pickResult.pickedMesh;
         if (currentMesh == ground || !currentMesh) {
-          if (!this.focusedObject.isEmpty()) {
+          if (!this._currentObject.isEmpty()) {
             this.offObjectCamera(canvas);
             this.unfocus();
           }
@@ -348,7 +239,6 @@ export default class Playground {
         }
 
         this.focus(currentMesh);
-        this.focusedObject.mesh.visibility = 0.5;
         this.onObjectCamera();
 
         previousPosition = currentMesh.position;
@@ -360,18 +250,18 @@ export default class Playground {
         return;
       }
 
-      if (this.focusedObject.isEmpty()) {
+      if (this._currentObject.isEmpty()) {
         return;
       }
 
       if (evt.ctrlKey) {
         previousY =
-          currentY != this.focusedObject.mesh.position.y
+          currentY != this._currentObject.mesh.position.y
             ? currentY
-            : this.focusedObject.mesh.position.y;
+            : this._currentObject.mesh.position.y;
         currentY = currentY - evt.movementY / this.decelarationDeltaY;
         if (Math.abs(currentY - previousY) > 0) {
-          this.focusedObject.mesh.position.y = currentY;
+          this._currentObject.mesh.position.y = currentY;
         }
 
         return;
@@ -383,19 +273,19 @@ export default class Playground {
         return;
       }
 
-      this.focusedObject.mesh.position.x = currentGroundPos.x;
-      this.focusedObject.mesh.position.z = currentGroundPos.z;
+      this._currentObject.mesh.position.x = currentGroundPos.x;
+      this._currentObject.mesh.position.z = currentGroundPos.z;
     };
 
     window.addEventListener(
       "wheel",
       (evt) => {
-        if (this.focusedObject.isEmpty()) {
+        if (this._currentObject.isEmpty()) {
           return;
         }
 
-        let direction = evt.deltaY < 0 ? Rotation.RotLeft : Rotation.Rotight;
-        this.rotate(direction);
+        let direction = evt.deltaY < 0 ? Rotation.RLEFT : Rotation.RRIGHT;
+        this._currentObject.rotate(direction);
       },
       { passive: true }
     );
