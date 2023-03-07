@@ -16,6 +16,7 @@ export class Object {
   private _empty: boolean;
   private _highlightLayer: HighlightLayer;
 
+  private _grabbed: boolean;
   constructor() {
     this.crateEmptyObject();
   }
@@ -27,6 +28,10 @@ export class Object {
 
   public get mesh() {
     return this._mesh;
+  }
+
+  public get grabbed(): boolean {
+    return this._grabbed;
   }
 
   public set mesh(mesh: Mesh) {
@@ -57,8 +62,8 @@ export class Object {
   }
   public onFocus() {
     this._mesh.enableEdgesRendering();
-    this._mesh.visibility = 0.5;
     this._highlightLayer.addMesh(this._mesh, Color3.White(), true);
+    this._grabbed = true;
   }
 
   public offFocus() {
@@ -144,5 +149,18 @@ export class Object {
         true
       ) +
       GameConfig._SIZE_GRID_CELL / 2;
+  }
+
+  public onDrop(isVertical: boolean = false) {
+    this._mesh.visibility = 1;
+
+    this.setX(this._mesh.position.x);
+    this.setZ(this._mesh.position.z);
+
+    if (isVertical) {
+      this.setY(this._mesh.position.y);
+    }
+
+    this._grabbed = false;
   }
 }

@@ -4,7 +4,7 @@ import { GridMaterial } from "@babylonjs/materials/grid/gridMaterial";
 import { Object, Rotation } from "./components/object";
 import { GameConfig } from "./config/gameConfig";
 import { CameraConfig } from "./config/cameraConfig";
-import * as utils from "./components/utils"
+import * as utils from "./components/utils";
 
 export default class Playground {
   private readonly decelarationDeltaY = 64;
@@ -24,16 +24,13 @@ export default class Playground {
     ) {
       this.unfocus();
     }
-    this._currentObject = this.objects.get(Number(currentMesh.id))!;
+    this._currentObject = this.getObject(Number(currentMesh.id));
     this._currentObject.onFocus();
   }
 
   private unfocus() {
     this._currentObject.offFocus();
-    this.objects.set(
-      Number(this._currentObject.mesh.id),
-      this._currentObject.cloneObjProperties()
-    );
+    this.updateObject();
     this._currentObject = new Object();
   }
 
@@ -94,6 +91,19 @@ export default class Playground {
   private offObjectCamera(canvas) {
     this.camera.attachControl(canvas, true);
     this.camera.lowerRadiusLimit = this.camera.upperRadiusLimit = null;
+  }
+
+  private getObject(id:number):Object
+  {
+    return this.objects.get(Number(id))!;
+  }
+
+  private updateObject():void
+  {
+    this.objects.set(
+      Number(this._currentObject.mesh.id),
+      this._currentObject.cloneObjProperties()
+    );
   }
 
   private createTestMeshes(
@@ -178,8 +188,6 @@ export default class Playground {
     let ground = this.createPlane();
     this.createTestMeshes(colors.length, colors, coords, scales);
 
-    let previousPosition;
-
     let previousY = 0;
     let currentY = previousY;
 
@@ -204,25 +212,13 @@ export default class Playground {
         return;
       }
 
-      this._currentObject.mesh.visibility = 1;
-      this._currentObject.setX(this._currentObject.mesh.position.x);
-      this._currentObject.setZ(this._currentObject.mesh.position.z);
+      let isVertical = false;
 
       if (evt.ctrlKey) {
-        let snapWeightY = 1;
-        if (scene.pointerY >= canvas.height / 2) {
-          snapWeightY = -1;
-        }
-
-        this._currentObject.setY(
-          this._currentObject.mesh.position.y,
-          GameConfig._SIZE_GRID_CELL
-        );
+        isVertical = true;
       }
 
-      if (previousPosition) {
-        previousPosition = null;
-      }
+      this._currentObject.onDrop(isVertical);
     };
 
     scene.onPointerDown = (evt, pickResult) => {
@@ -243,19 +239,16 @@ export default class Playground {
 
         this.focus(currentMesh);
         this.onObjectCamera();
-
-        previousPosition = currentMesh.position;
       }
     };
 
     scene.onPointerMove = (evt) => {
-      if (!previousPosition) {
+      if(!this._currentObject.grabbed)
+      {
         return;
       }
 
-      if (this._currentObject.isEmpty()) {
-        return;
-      }
+      this._currentObject.mesh.visibility = 0.5;
 
       if (evt.ctrlKey) {
         previousY =
