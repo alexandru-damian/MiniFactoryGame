@@ -217,6 +217,7 @@ export default class Playground {
       }
 
       this._currentObject.onDrop(isVertical);
+      this.offObjectCamera(canvas);
     };
 
     scene.onPointerDown = (evt, pickResult) => {
@@ -229,14 +230,12 @@ export default class Playground {
         currentMesh = pickResult.pickedMesh;
         if (currentMesh == ground || !currentMesh) {
           if (!this._currentObject.isEmpty()) {
-            this.offObjectCamera(canvas);
             this.unfocus();
           }
           return;
         }
 
         this.focus(currentMesh);
-        this.onObjectCamera();
       }
     };
 
@@ -245,6 +244,7 @@ export default class Playground {
         return;
       }
 
+      this.onObjectCamera();
       this._currentObject.mesh.visibility = 0.5;
 
       if (evt.ctrlKey) {
