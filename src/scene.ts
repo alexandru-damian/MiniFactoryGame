@@ -93,13 +93,11 @@ export default class Playground {
     this.camera.lowerRadiusLimit = this.camera.upperRadiusLimit = null;
   }
 
-  private getObject(id:number):Object
-  {
+  private getObject(id: number): Object {
     return this.objects.get(Number(id))!;
   }
 
-  private updateObject():void
-  {
+  private updateObject(): void {
     this.objects.set(
       Number(this._currentObject.mesh.id),
       this._currentObject.cloneObjProperties()
@@ -243,8 +241,7 @@ export default class Playground {
     };
 
     scene.onPointerMove = (evt) => {
-      if(!this._currentObject.grabbed)
-      {
+      if (!this._currentObject.grabbed) {
         return;
       }
 
@@ -274,14 +271,28 @@ export default class Playground {
     };
 
     window.addEventListener(
-      "wheel",
+      "keydown",
       (evt) => {
+
         if (this._currentObject.isEmpty()) {
           return;
         }
 
-        let direction = evt.deltaY < 0 ? Rotation.RLEFT : Rotation.RRIGHT;
-        this._currentObject.rotate(direction);
+        console.log(evt.code)
+
+        switch (evt.code) {
+          case "KeyQ": {
+            this._currentObject.rotate(Rotation.RLEFT);
+            break;
+          }
+          case "KeyE": {
+            this._currentObject.rotate(Rotation.RRIGHT);
+            break;
+          }
+          default: {
+            break;
+          }
+        }
       },
       { passive: true }
     );
