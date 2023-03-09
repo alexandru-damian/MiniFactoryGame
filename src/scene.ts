@@ -57,7 +57,7 @@ export default class Playground {
       sizes.z,
       GameConfig._SIZE_GRID_CELL / 2
     );
-    box.position.y = sizes.y / 2;
+      box.position.y = sizes.y/2 - GameConfig._SIZE_GRID_CELL/2;
 
     const boxMat = new BABYLON.StandardMaterial("boxMat");
     boxMat.diffuseColor = BABYLON.Color3.FromHexString(color);
@@ -76,7 +76,7 @@ export default class Playground {
     ground.material = grid;
     ground.position = new BABYLON.Vector3(
       -GameConfig._SIZE_GRID_CELL / 2,
-      0,
+      -GameConfig._SIZE_GRID_CELL/ 2,
       -GameConfig._SIZE_GRID_CELL / 2
     );
     grid.mainColor = new BABYLON.Color3(0.09, 0.21, 0.62);
@@ -210,13 +210,7 @@ export default class Playground {
         return;
       }
 
-      let isVertical = false;
-
-      if (evt.ctrlKey) {
-        isVertical = true;
-      }
-
-      this._currentObject.onDrop(isVertical);
+      this._currentObject.onDrop();
       this.offObjectCamera(canvas);
     };
 
@@ -277,8 +271,6 @@ export default class Playground {
         if (this._currentObject.isEmpty()) {
           return;
         }
-
-        console.log(evt.code)
 
         switch (evt.code) {
           case "KeyQ": {

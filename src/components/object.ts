@@ -126,7 +126,7 @@ export class Object {
 
   public setX(x: number, offset: number = GameConfig._SIZE_GRID_CELL) {
     this._mesh.position.x = utils.snapToGrid(
-      this._mesh.position.x,
+      x,
       this._orientationScaling.x,
       offset / 2
     );
@@ -134,32 +134,28 @@ export class Object {
 
   public setZ(z: number, offset: number = GameConfig._SIZE_GRID_CELL) {
     this._mesh.position.z = utils.snapToGrid(
-      this._mesh.position.z,
+      z,
       this._orientationScaling.z,
       offset / 2
     );
   }
 
-  public setY(z: number, offset: number = GameConfig._SIZE_GRID_CELL) {
+  public setY(y: number, offset: number = GameConfig._SIZE_GRID_CELL) {
     this._mesh.position.y =
       utils.snapToGrid(
-        this._mesh.position.y,
+        y,
         this._orientationScaling.y,
         offset / 2,
         true
-      ) +
-      GameConfig._SIZE_GRID_CELL / 2;
+      );
   }
 
-  public onDrop(isVertical: boolean = false) {
+  public onDrop() {
     this._mesh.visibility = 1;
 
     this.setX(this._mesh.position.x);
     this.setZ(this._mesh.position.z);
-
-    if (isVertical) {
-      this.setY(this._mesh.position.y);
-    }
+    this.setY(this._mesh.position.y);
 
     this._grabbed = false;
   }
