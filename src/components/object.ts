@@ -145,8 +145,7 @@ export class Object {
       utils.snapToGrid(
         y,
         this._orientationScaling.y,
-        offset / 2,
-        true
+        offset / 2
       );
   }
 
@@ -160,3 +159,5 @@ export class Object {
     this._grabbed = false;
   }
 }
+
+export type Objects = Map<number,Object>;

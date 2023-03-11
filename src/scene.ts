@@ -1,7 +1,7 @@
 import * as BABYLON from "@babylonjs/core";
 import { GridMaterial } from "@babylonjs/materials/grid/gridMaterial";
 
-import { Object, Rotation } from "./components/object";
+import { Object, Objects, Rotation } from "./components/object";
 import { GameConfig } from "./config/gameConfig";
 import { CameraConfig } from "./config/cameraConfig";
 import * as utils from "./components/utils";
@@ -14,7 +14,7 @@ export default class Playground {
   private zoomSlowness = 5;
   private camera: BABYLON.ArcRotateCamera;
 
-  private objects: Map<number, Object>;
+  private objects: Objects;
   private sizeObjects: number;
 
   private focus(currentMesh) {
