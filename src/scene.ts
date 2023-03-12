@@ -1,21 +1,24 @@
 import * as BABYLON from "@babylonjs/core";
 import { GridMaterial } from "@babylonjs/materials/grid/gridMaterial";
 
-import { Object, Objects, Rotation } from "./components/object";
+import { GameObject, Objects, Rotation } from "./components/object";
 import { GameConfig } from "./config/gameConfig";
 import { CameraConfig } from "./config/cameraConfig";
 import * as utils from "./components/utils";
+import { Collision, FaceBox } from "./components/collision";
+import { Vector3 } from "@babylonjs/core";
 
 export default class Playground {
   private readonly decelarationDeltaY = 64;
 
-  private _currentObject: Object;
+  private _currentObject: GameObject;
 
   private zoomSlowness = 5;
   private camera: BABYLON.ArcRotateCamera;
 
-  private objects: Objects;
+  private _objects: Objects;
   private sizeObjects: number;
+  private _collisions: Collision;
 
   private focus(currentMesh) {
     if (
@@ -31,7 +34,7 @@ export default class Playground {
   private unfocus() {
     this._currentObject.offFocus();
     this.updateObject();
-    this._currentObject = new Object();
+    this._currentObject = new GameObject();
   }
 
   private createCube(
@@ -57,7 +60,7 @@ export default class Playground {
       sizes.z,
       GameConfig._SIZE_GRID_CELL / 2
     );
-      box.position.y = sizes.y/2 - GameConfig._SIZE_GRID_CELL/2;
+    box.position.y = sizes.y / 2 - GameConfig._SIZE_GRID_CELL / 2;
 
     const boxMat = new BABYLON.StandardMaterial("boxMat");
     boxMat.diffuseColor = BABYLON.Color3.FromHexString(color);
@@ -76,7 +79,7 @@ export default class Playground {
     ground.material = grid;
     ground.position = new BABYLON.Vector3(
       -GameConfig._SIZE_GRID_CELL / 2,
-      -GameConfig._SIZE_GRID_CELL/ 2,
+      -GameConfig._SIZE_GRID_CELL / 2,
       -GameConfig._SIZE_GRID_CELL / 2
     );
     grid.mainColor = new BABYLON.Color3(0.09, 0.21, 0.62);
@@ -93,12 +96,12 @@ export default class Playground {
     this.camera.lowerRadiusLimit = this.camera.upperRadiusLimit = null;
   }
 
-  private getObject(id: number): Object {
-    return this.objects.get(Number(id))!;
+  private getObject(id: number): GameObject {
+    return this._objects.get(Number(id))!;
   }
 
   private updateObject(): void {
-    this.objects.set(
+    this._objects.set(
       Number(this._currentObject.mesh.id),
       this._currentObject.cloneObjProperties()
     );
@@ -111,8 +114,8 @@ export default class Playground {
     scales: Array<BABYLON.Vector3>
   ) {
     for (let index = 0; index < size; ++index) {
-      this.objects.set(this.sizeObjects, new Object());
-      let obj = this.objects.get(this.sizeObjects++)!;
+      this._objects.set(this.sizeObjects, new GameObject());
+      let obj = this._objects.get(this.sizeObjects++)!;
 
       obj.mesh = this.createCube(
         String(this.sizeObjects - 1),
@@ -147,10 +150,10 @@ export default class Playground {
     light.intensity = 1;
 
     scene.hoverCursor = "default";
-    this._currentObject = new Object();
+    this._currentObject = new GameObject();
 
-    this.objects = new Map<number, Object>();
-    this.sizeObjects = this.objects.size;
+    this._objects = new Map<number, GameObject>();
+    this.sizeObjects = this._objects.size;
 
     let colors = [
       "#4A6DE5",
@@ -185,9 +188,12 @@ export default class Playground {
 
     let ground = this.createPlane();
     this.createTestMeshes(colors.length, colors, coords, scales);
+    this._collisions = new Collision(this._objects);
 
     let previousY = 0;
     let currentY = previousY;
+    let previous: Vector3;
+    let face: FaceBox;
 
     let getGroundPosition = () => {
       // Use a predicate to get position on the ground
@@ -230,6 +236,7 @@ export default class Playground {
         }
 
         this.focus(currentMesh);
+        previous = this._currentObject.mesh.position.clone();
       }
     };
 
@@ -262,12 +269,80 @@ export default class Playground {
 
       this._currentObject.mesh.position.x = currentGroundPos.x;
       this._currentObject.mesh.position.z = currentGroundPos.z;
+
+      let delta = new Vector3();
+      delta.fromArray(
+        utils.delta(currentGroundPos.asArray(), previous.asArray())
+      );
+
+      if (
+        Math.abs(delta.x) >= GameConfig._SIZE_GRID_CELL
+      ) {
+        face = this._collisions.getBoundingBoxFace(delta);
+        previous.x = this._currentObject.mesh.position.x;
+        console.log("face: " + String(face));
+      }else if (
+        Math.abs(delta.z) >= GameConfig._SIZE_GRID_CELL
+      ) {
+        face = this._collisions.getBoundingBoxFace(delta);
+        previous.z = this._currentObject.mesh.position.z;
+        console.log("face: " + String(face));
+      }
+
+      this._collisions.collides(
+        this._currentObject,
+        (currentMesh, collidedMesh): void => {
+          if (
+            face == FaceBox.Right &&
+            this._currentObject.mesh.position.x +
+              this._currentObject.mesh.scaling.x / 2 >
+              collidedMesh.position.x - collidedMesh.scaling.x / 2
+          ) {
+            this._currentObject.mesh.position.x =
+              collidedMesh.position.x -
+              collidedMesh.scaling.x / 2 -
+              currentMesh.scaling.x / 2;
+              previous.x = this._currentObject.mesh.position.x;
+          } else if (
+            face == FaceBox.Left &&
+            this._currentObject.mesh.position.x -
+              this._currentObject.mesh.scaling.x / 2 <
+              collidedMesh.position.x + collidedMesh.scaling.x / 2
+          ) {
+            this._currentObject.mesh.position.x =
+              collidedMesh.position.x +
+              collidedMesh.scaling.x / 2 +
+              currentMesh.scaling.x / 2;
+              previous.x = this._currentObject.mesh.position.x;
+          }else
+           if (face == FaceBox.Front &&
+            this._currentObject.mesh.position.z +
+              this._currentObject.mesh.scaling.z / 2 >
+            collidedMesh.position.z - collidedMesh.scaling.z / 2
+          ) {
+            this._currentObject.mesh.position.z =
+              collidedMesh.position.z -
+              collidedMesh.scaling.z / 2 -
+              currentMesh.scaling.z / 2;
+              previous.z = this._currentObject.mesh.position.z;
+          }else if (face == FaceBox.Back &&
+            this._currentObject.mesh.position.z -
+              this._currentObject.mesh.scaling.z / 2 <
+            collidedMesh.position.z + collidedMesh.scaling.z / 2
+          ) {
+            this._currentObject.mesh.position.z =
+              collidedMesh.position.z +
+              collidedMesh.scaling.z / 2 +
+              currentMesh.scaling.z / 2;
+              previous.z = this._currentObject.mesh.position.z;
+          }
+        }
+      );
     };
 
     window.addEventListener(
       "keydown",
       (evt) => {
-
         if (this._currentObject.isEmpty()) {
           return;
         }

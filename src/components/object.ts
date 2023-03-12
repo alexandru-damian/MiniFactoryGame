@@ -9,7 +9,7 @@ export enum Rotation {
   RRIGHT,
 }
 
-export class Object {
+export class GameObject {
   private _mesh: Mesh;
   public _orientationScaling: Vector3;
 
@@ -47,8 +47,8 @@ export class Object {
     }
   }
 
-  public cloneObjProperties(): Object {
-    let newObj = new Object();
+  public cloneObjProperties(): GameObject {
+    let newObj = new GameObject();
 
     newObj._empty = this._empty;
     newObj._mesh = this._mesh;
@@ -160,4 +160,4 @@ export class Object {
   }
 }
 
-export type Objects = Map<number,Object>;
+export type Objects = Map<number,GameObject>;
