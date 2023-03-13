@@ -291,49 +291,49 @@ export default class Playground {
 
       this._collisions.collides(
         this._currentObject,
-        (currentMesh, collidedMesh): void => {
+        (obj): void => {
           if (
             face == FaceBox.Right &&
             this._currentObject.mesh.position.x +
-              this._currentObject.mesh.scaling.x / 2 >
-              collidedMesh.position.x - collidedMesh.scaling.x / 2
+              this._currentObject._orientationScaling.x / 2 >
+              obj.mesh.position.x - obj._orientationScaling.x / 2
           ) {
             this._currentObject.mesh.position.x =
-              collidedMesh.position.x -
-              collidedMesh.scaling.x / 2 -
-              currentMesh.scaling.x / 2;
+              obj.mesh.position.x -
+              obj._orientationScaling.x / 2 -
+              this._currentObject._orientationScaling.x / 2;
               previous.x = this._currentObject.mesh.position.x;
           } else if (
             face == FaceBox.Left &&
             this._currentObject.mesh.position.x -
-              this._currentObject.mesh.scaling.x / 2 <
-              collidedMesh.position.x + collidedMesh.scaling.x / 2
+              this._currentObject._orientationScaling.x / 2 <
+              obj.mesh.position.x + obj._orientationScaling.x / 2
           ) {
             this._currentObject.mesh.position.x =
-              collidedMesh.position.x +
-              collidedMesh.scaling.x / 2 +
-              currentMesh.scaling.x / 2;
+              obj.mesh.position.x +
+              obj._orientationScaling.x / 2 +
+              this._currentObject._orientationScaling.x / 2;
               previous.x = this._currentObject.mesh.position.x;
           }else
            if (face == FaceBox.Front &&
             this._currentObject.mesh.position.z +
-              this._currentObject.mesh.scaling.z / 2 >
-            collidedMesh.position.z - collidedMesh.scaling.z / 2
+              this._currentObject._orientationScaling.z / 2 >
+            obj.mesh.position.z - obj._orientationScaling.z / 2
           ) {
             this._currentObject.mesh.position.z =
-              collidedMesh.position.z -
-              collidedMesh.scaling.z / 2 -
-              currentMesh.scaling.z / 2;
+              obj.mesh.position.z -
+              obj._orientationScaling.z / 2 -
+              this._currentObject._orientationScaling.z / 2;
               previous.z = this._currentObject.mesh.position.z;
           }else if (face == FaceBox.Back &&
             this._currentObject.mesh.position.z -
-              this._currentObject.mesh.scaling.z / 2 <
-            collidedMesh.position.z + collidedMesh.scaling.z / 2
+              this._currentObject._orientationScaling.z / 2 <
+            obj.mesh.position.z + obj._orientationScaling.z / 2
           ) {
             this._currentObject.mesh.position.z =
-              collidedMesh.position.z +
-              collidedMesh.scaling.z / 2 +
-              currentMesh.scaling.z / 2;
+              obj.mesh.position.z +
+              obj._orientationScaling.z / 2 +
+              this._currentObject._orientationScaling.z / 2;
               previous.z = this._currentObject.mesh.position.z;
           }
         }

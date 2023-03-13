@@ -21,7 +21,7 @@ export class Collision {
 
   public collides(
     currentObj: GameObject,
-    onCollide: (currentMesh: Mesh, collidedMesh: Mesh) => void
+    onCollide: (object: GameObject) => void
   ): void {
     for (let [key, obj] of this._objects) {
       if (currentObj.mesh.id == String(key)) {
@@ -29,7 +29,7 @@ export class Collision {
       }
 
       if (currentObj.mesh.intersectsMesh(obj.mesh)) {
-        onCollide(currentObj.mesh, obj.mesh);
+        onCollide(obj);
         break;
       }
     }
