@@ -9,9 +9,20 @@ export enum Rotation {
   RRIGHT,
 }
 
+export enum FaceBox {
+  Front = "F",
+  Back = "B",
+  Up = "U",
+  Down = "D",
+  Left = "L",
+  Right = "R",
+  Invalid = ""
+}
+
 export class GameObject {
   private _mesh: Mesh;
   public _orientationScaling: Vector3;
+  private _direction: FaceBox;
 
   private _empty: boolean;
   private _highlightLayer: HighlightLayer;
@@ -28,6 +39,11 @@ export class GameObject {
 
   public get mesh() {
     return this._mesh;
+  }
+
+  public get direction()
+  {
+    return this._direction;
   }
 
   public get grabbed(): boolean {
@@ -52,12 +68,14 @@ export class GameObject {
 
     newObj._empty = this._empty;
     newObj._mesh = this._mesh;
+    this._direction = FaceBox.Invalid;
+
     newObj._orientationScaling = this._orientationScaling.clone();
 
     return newObj;
   }
 
-  public isEmpty() {
+  public isEmpty():boolean {
     return this._empty;
   }
   public onFocus() {
@@ -69,6 +87,7 @@ export class GameObject {
   public offFocus() {
     this._highlightLayer.removeMesh(this._mesh);
     this._mesh.disableEdgesRendering();
+    this._direction = FaceBox.Invalid;
   }
 
   public rotate(direction: Rotation) {
@@ -141,12 +160,11 @@ export class GameObject {
   }
 
   public setY(y: number, offset: number = GameConfig._SIZE_GRID_CELL) {
-    this._mesh.position.y =
-      utils.snapToGrid(
-        y,
-        this._orientationScaling.y,
-        offset / 2
-      );
+    this._mesh.position.y = utils.snapToGrid(
+      y,
+      this._orientationScaling.y,
+      offset / 2
+    );
   }
 
   public onDrop() {
@@ -158,6 +176,56 @@ export class GameObject {
 
     this._grabbed = false;
   }
+
+  public onCollide(obj: GameObject): void {
+    if (
+      this._mesh.position.x+ this._orientationScaling.x/2 >= obj.mesh.position.x - obj._orientationScaling.x/2
+    ) {
+      console.log("Right");
+      console.log(obj.mesh.id);
+      this.mesh.position.x =
+        obj.mesh.position.x -
+        obj._orientationScaling.x / 2 -
+        this._orientationScaling.x / 2;
+    } else if (
+      this._mesh.position.x- this._orientationScaling.x/2 <= obj.mesh.position.x + obj._orientationScaling.x/2
+    ) {
+      console.log("Left");
+      console.log(obj.mesh.id);
+      this.mesh.position.x =
+        obj.mesh.position.x +
+        obj._orientationScaling.x / 2 +
+        this._orientationScaling.x / 2;
+    }
+
+    // if (
+    //   this.mesh.position.z +
+    //     this._orientationScaling.z / 2 >=
+    //     obj.mesh.position.z - obj._orientationScaling.z / 2 &&
+    //   this.mesh.position.z -
+    //     this._orientationScaling.z / 2 <=
+    //     obj.mesh.position.z - obj._orientationScaling.z / 2
+    // ) {
+    //   console.log("Back");
+    //   this.mesh.position.z =
+    //     obj.mesh.position.z -
+    //     obj._orientationScaling.z / 2 -
+    //     this._orientationScaling.z / 2;
+    // } else if (
+    //   this.mesh.position.z -
+    //     this._orientationScaling.z / 2 <=
+    //     obj.mesh.position.z + obj._orientationScaling.z / 2 &&
+    //   this.mesh.position.z +
+    //     this._orientationScaling.z / 2 >=
+    //     obj.mesh.position.z - obj._orientationScaling.z / 2
+    // ) {
+    //   console.log("Front");
+    //   this.mesh.position.z =
+    //     obj.mesh.position.z +
+    //     obj._orientationScaling.z / 2 +
+    //     this._orientationScaling.z / 2;
+    // }
+  }
 }
 
-export type Objects = Map<number,GameObject>;
+export type Objects = Map<number, GameObject>;

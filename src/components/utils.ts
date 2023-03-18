@@ -18,6 +18,7 @@ export function sign(x: number): number {
   if (sign == 0) {
     return 1;
   }
+
   return sign;
 }
 
