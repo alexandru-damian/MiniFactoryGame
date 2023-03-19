@@ -1,11 +1,11 @@
 import * as BABYLON from "@babylonjs/core";
 import { GridMaterial } from "@babylonjs/materials/grid/gridMaterial";
 
-import { GameObject, Objects, Rotation,FaceBox } from "./components/object";
+import { GameObject, Objects, Rotation, FaceBox } from "./components/object";
 import { GameConfig } from "./config/gameConfig";
 import { CameraConfig } from "./config/cameraConfig";
 import * as utils from "./components/utils";
-import { Collision} from "./components/collision";
+import { Collision } from "./components/collision";
 import { Vector3 } from "@babylonjs/core";
 
 export default class Playground {
@@ -19,7 +19,6 @@ export default class Playground {
   private _objects: Objects;
   private sizeObjects: number;
   private _collisions: Collision;
-  private _currentGroundPos:Vector3;
 
   private focus(currentMesh) {
     if (
@@ -128,8 +127,12 @@ export default class Playground {
   }
 
   private updatePosition(position: Vector3): void {
-    this._currentObject.mesh.position.x = position.x;
-    this._currentObject.mesh.position.z = position.z;
+    //if (!this._currentObject.hitAxis.hitX) {
+      this._currentObject.mesh.position.x = position.x;
+    //}
+    //if (!this._currentObject.hitAxis.hitZ) {
+      this._currentObject.mesh.position.z = position.z;
+    //}
   }
 
   public createScene(
@@ -264,23 +267,15 @@ export default class Playground {
         return;
       }
 
-      this._currentGroundPos = getGroundPosition() as BABYLON.Vector3;
+      let newPos = getGroundPosition() as BABYLON.Vector3;
 
-      if (!this._currentGroundPos) {
+      if (!newPos) {
         return;
       }
-      this.updatePosition(this._currentGroundPos);
+
+      this.updatePosition(newPos);
+      this._collisions.collides(newPos, this._currentObject);
     };
-
-    scene.registerBeforeRender(()=>
-    {
-      if(this._currentObject.isEmpty())
-      {
-        return;
-      }
-
-      this._collisions.collides(this._currentObject);
-    });
 
     window.addEventListener(
       "keydown",

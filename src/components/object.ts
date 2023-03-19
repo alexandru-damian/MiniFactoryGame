@@ -1,28 +1,19 @@
-import { IPointerEvent, Mesh, Scene } from "@babylonjs/core";
+import { Mesh } from "@babylonjs/core";
 import { Vector3, Color3, Tools } from "@babylonjs/core/";
 import { HighlightLayer } from "@babylonjs/core";
 import { GameConfig } from "../config/gameConfig";
 import * as utils from "./utils";
+import { Collision, HitAxis } from "./collision";
 
 export enum Rotation {
   RLEFT = 0,
   RRIGHT,
 }
 
-export enum FaceBox {
-  Front = "F",
-  Back = "B",
-  Up = "U",
-  Down = "D",
-  Left = "L",
-  Right = "R",
-  Invalid = ""
-}
-
 export class GameObject {
   private _mesh: Mesh;
   public _orientationScaling: Vector3;
-  private _direction: FaceBox;
+  private _hitAxis: HitAxis;
 
   private _empty: boolean;
   private _highlightLayer: HighlightLayer;
@@ -34,6 +25,7 @@ export class GameObject {
 
   private crateEmptyObject() {
     this._empty = true;
+    this._hitAxis = new HitAxis();
     this._highlightLayer = new HighlightLayer("hl");
   }
 
@@ -41,9 +33,8 @@ export class GameObject {
     return this._mesh;
   }
 
-  public get direction()
-  {
-    return this._direction;
+  public get hitAxis() {
+    return this._hitAxis;
   }
 
   public get grabbed(): boolean {
@@ -68,14 +59,13 @@ export class GameObject {
 
     newObj._empty = this._empty;
     newObj._mesh = this._mesh;
-    this._direction = FaceBox.Invalid;
 
     newObj._orientationScaling = this._orientationScaling.clone();
 
     return newObj;
   }
 
-  public isEmpty():boolean {
+  public isEmpty(): boolean {
     return this._empty;
   }
   public onFocus() {
@@ -87,7 +77,6 @@ export class GameObject {
   public offFocus() {
     this._highlightLayer.removeMesh(this._mesh);
     this._mesh.disableEdgesRendering();
-    this._direction = FaceBox.Invalid;
   }
 
   public rotate(direction: Rotation) {
@@ -175,56 +164,51 @@ export class GameObject {
     this.setY(this._mesh.position.y);
 
     this._grabbed = false;
+    this.hitAxis.reset();
   }
 
-  public onCollide(obj: GameObject): void {
-    if (
-      this._mesh.position.x+ this._orientationScaling.x/2 >= obj.mesh.position.x - obj._orientationScaling.x/2
-    ) {
-      console.log("Right");
-      console.log(obj.mesh.id);
-      this.mesh.position.x =
-        obj.mesh.position.x -
-        obj._orientationScaling.x / 2 -
-        this._orientationScaling.x / 2;
-    } else if (
-      this._mesh.position.x- this._orientationScaling.x/2 <= obj.mesh.position.x + obj._orientationScaling.x/2
-    ) {
-      console.log("Left");
-      console.log(obj.mesh.id);
-      this.mesh.position.x =
-        obj.mesh.position.x +
-        obj._orientationScaling.x / 2 +
-        this._orientationScaling.x / 2;
+  private calculateHitAxis(obj: GameObject): void {
+    let hitAxisVector = new Vector3(this._hitAxis.x, 0, 0);
+    for (let axis of ["x"]) {
+      if (hitAxisVector[axis] == 0) {
+        if (
+          this.mesh.position[axis] + this._orientationScaling[axis] / 2 <
+          obj.mesh.position[axis] + obj._orientationScaling[axis] / 2
+        ) {
+          this._hitAxis[axis] = 1;
+        } else {
+          this._hitAxis[axis] = -1;
+        }
+      }
     }
+  }
 
-    // if (
-    //   this.mesh.position.z +
-    //     this._orientationScaling.z / 2 >=
-    //     obj.mesh.position.z - obj._orientationScaling.z / 2 &&
-    //   this.mesh.position.z -
-    //     this._orientationScaling.z / 2 <=
-    //     obj.mesh.position.z - obj._orientationScaling.z / 2
-    // ) {
-    //   console.log("Back");
-    //   this.mesh.position.z =
-    //     obj.mesh.position.z -
-    //     obj._orientationScaling.z / 2 -
-    //     this._orientationScaling.z / 2;
-    // } else if (
-    //   this.mesh.position.z -
-    //     this._orientationScaling.z / 2 <=
-    //     obj.mesh.position.z + obj._orientationScaling.z / 2 &&
-    //   this.mesh.position.z +
-    //     this._orientationScaling.z / 2 >=
-    //     obj.mesh.position.z - obj._orientationScaling.z / 2
-    // ) {
-    //   console.log("Front");
-    //   this.mesh.position.z =
-    //     obj.mesh.position.z +
-    //     obj._orientationScaling.z / 2 +
-    //     this._orientationScaling.z / 2;
-    // }
+  public onCollide(newPosition: Vector3, obj: GameObject): void {
+    this.calculateHitAxis(obj);
+
+    if (this._hitAxis.x != 0) {
+      if (
+        this._hitAxis.x > 0 &&
+        newPosition.x + this._orientationScaling.x / 2 >
+          obj.mesh.position.x - obj._orientationScaling.x / 2
+      ) {
+        console.log("to right");
+        this.mesh.position.x =
+          obj.mesh.position.x -
+          obj._orientationScaling.x / 2 -
+          this._orientationScaling.x / 2;
+      } else if (
+        this._hitAxis.x < 0 &&
+        newPosition.x - this._orientationScaling.x / 2 <
+          obj.mesh.position.x + obj._orientationScaling.x / 2
+      ) {
+        console.log("to left");
+        this.mesh.position.x =
+          obj.mesh.position.x +
+          obj._orientationScaling.x / 2 +
+          this._orientationScaling.x / 2;
+      }
+    }
   }
 }
 
