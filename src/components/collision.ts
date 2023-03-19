@@ -1,4 +1,4 @@
-import { GameObject, Objects, FaceBox } from "./object";
+import { GameObject, Objects} from "./object";
 import { Vector3 } from "@babylonjs/core";
 
 export class HitAxis

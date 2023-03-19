@@ -1,7 +1,7 @@
 import * as BABYLON from "@babylonjs/core";
 import { GridMaterial } from "@babylonjs/materials/grid/gridMaterial";
 
-import { GameObject, Objects, Rotation, FaceBox } from "./components/object";
+import { GameObject, Objects, Rotation } from "./components/object";
 import { GameConfig } from "./config/gameConfig";
 import { CameraConfig } from "./config/cameraConfig";
 import * as utils from "./components/utils";

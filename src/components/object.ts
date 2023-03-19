@@ -3,7 +3,7 @@ import { Vector3, Color3, Tools } from "@babylonjs/core/";
 import { HighlightLayer } from "@babylonjs/core";
 import { GameConfig } from "../config/gameConfig";
 import * as utils from "./utils";
-import { Collision, HitAxis } from "./collision";
+import { HitAxis } from "./collision";
 
 export enum Rotation {
   RLEFT = 0,
@@ -167,10 +167,14 @@ export class GameObject {
     this.hitAxis.reset();
   }
 
-  private calculateHitAxis(obj: GameObject): void {
-    let hitAxisVector = new Vector3(this._hitAxis.x, 0, 0);
+  private updateObjectOnAxis(newPosition: Vector3, obj: GameObject): void {
+    let closestAxis: [axis: Axis, value: number] = [
+      "",
+      Number.POSITIVE_INFINITY,
+    ];
+
     for (let axis of ["x"]) {
-      if (hitAxisVector[axis] == 0) {
+      if (this._hitAxis[axis] == 0) {
         if (
           this.mesh.position[axis] + this._orientationScaling[axis] / 2 <
           obj.mesh.position[axis] + obj._orientationScaling[axis] / 2
@@ -179,37 +183,86 @@ export class GameObject {
         } else {
           this._hitAxis[axis] = -1;
         }
+        closestAxis = this.calculateClosestAxis(
+          axis,
+          this._hitAxis[axis],
+          closestAxis,
+          obj
+        );
+      }
+
+      console.log("update for "+axis);
+      this.updateWallPointOnAxis(axis, newPosition, obj);
+    }
+
+    if (closestAxis[0] == "") {
+      return;
+    }
+      console.log(closestAxis[0]);
+      this.updateWallPointOnAxis(closestAxis[0], newPosition, obj);
+  }
+
+  private calculateClosestAxis(
+    axis: Axis,
+    direction: number,
+    axisVal: [axis: Axis, value: number],
+    obj: GameObject
+  ): [Axis, number] {
+    let diff: number;
+
+    if (direction > 0) {
+      diff = Math.abs(
+        this.mesh.position[axis] +
+          this._orientationScaling[axis] / 2 -
+          obj.mesh.position[axis] -
+          obj._orientationScaling[axis] / 2
+      );
+    } else {
+      diff = Math.abs(
+        this.mesh.position[axis] -
+          this._orientationScaling[axis] / 2 -
+          obj.mesh.position[axis] +
+          obj._orientationScaling[axis] / 2
+      );
+    }
+
+    return diff < axisVal[1] ? [axis, diff] : axisVal;
+  }
+
+  private updateWallPointOnAxis(
+    axis: Axis,
+    newPosition: Vector3,
+    obj: GameObject
+  ): void {
+    if (this._hitAxis[axis] != 0) {
+      if (
+        this._hitAxis[axis] > 0 &&
+        newPosition[axis] + this._orientationScaling[axis] / 2 >
+          obj.mesh.position[axis] - obj._orientationScaling[axis] / 2
+      ) {
+        console.log(axis + " pos");
+        this.mesh.position[axis] =
+          obj.mesh.position[axis] -
+          obj._orientationScaling[axis] / 2 -
+          this._orientationScaling[axis] / 2;
+      } else if (
+        this._hitAxis[axis] < 0 &&
+        newPosition[axis] - this._orientationScaling[axis] / 2 <
+          obj.mesh.position[axis] + obj._orientationScaling[axis] / 2
+      ) {
+        console.log(axis + " neg");
+        this.mesh.position[axis] =
+          obj.mesh.position[axis] +
+          obj._orientationScaling[axis] / 2 +
+          this._orientationScaling[axis] / 2;
       }
     }
   }
 
   public onCollide(newPosition: Vector3, obj: GameObject): void {
-    this.calculateHitAxis(obj);
-
-    if (this._hitAxis.x != 0) {
-      if (
-        this._hitAxis.x > 0 &&
-        newPosition.x + this._orientationScaling.x / 2 >
-          obj.mesh.position.x - obj._orientationScaling.x / 2
-      ) {
-        console.log("to right");
-        this.mesh.position.x =
-          obj.mesh.position.x -
-          obj._orientationScaling.x / 2 -
-          this._orientationScaling.x / 2;
-      } else if (
-        this._hitAxis.x < 0 &&
-        newPosition.x - this._orientationScaling.x / 2 <
-          obj.mesh.position.x + obj._orientationScaling.x / 2
-      ) {
-        console.log("to left");
-        this.mesh.position.x =
-          obj.mesh.position.x +
-          obj._orientationScaling.x / 2 +
-          this._orientationScaling.x / 2;
-      }
-    }
+    this.updateObjectOnAxis(newPosition, obj);
   }
 }
 
+type Axis = string;
 export type Objects = Map<number, GameObject>;
