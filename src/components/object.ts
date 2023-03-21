@@ -83,8 +83,7 @@ export class GameObject {
     this._mesh.disableEdgesRendering();
   }
 
-  public resetHitAxis():void
-  {
+  public resetHitAxis(): void {
     this._hitAxis.axis = "";
     this._hitAxis.direction = 0;
   }
@@ -177,7 +176,6 @@ export class GameObject {
   }
 
   private updateObjectOnAxis(newPosition: Vector3, obj: GameObject): void {
-
     for (let axis of ["x", "z"]) {
       let direction: number = 0;
       if (
@@ -216,8 +214,7 @@ export class GameObject {
   }
 
   private findCollidedSize(axisColided: HitAxis, obj: GameObject): number {
-    if(axisColided.axis == "")
-    {
+    if (axisColided.axis == "") {
       return Number.POSITIVE_INFINITY;
     }
 
@@ -245,15 +242,14 @@ export class GameObject {
     );
   }
 
-  private updateWallPointOnAxis(
-    newPosition: Vector3,
-    obj: GameObject
-  ): void {
+  private updateWallPointOnAxis(newPosition: Vector3, obj: GameObject): void {
     if (this._hitAxis.axis != "") {
       if (
         this._hitAxis.direction > 0 &&
-        newPosition[this._hitAxis.axis] + this._orientationScaling[this._hitAxis.axis] / 2 >
-          obj.mesh.position[this._hitAxis.axis] - obj._orientationScaling[this._hitAxis.axis] / 2
+        newPosition[this._hitAxis.axis] +
+          this._orientationScaling[this._hitAxis.axis] / 2 >
+          obj.mesh.position[this._hitAxis.axis] -
+            obj._orientationScaling[this._hitAxis.axis] / 2
       ) {
         console.log(this._hitAxis.axis + " pos");
         this.mesh.position[this._hitAxis.axis] =
@@ -262,8 +258,10 @@ export class GameObject {
           this._orientationScaling[this._hitAxis.axis] / 2;
       } else if (
         this._hitAxis.direction < 0 &&
-        newPosition[this._hitAxis.axis] - this._orientationScaling[this._hitAxis.axis] / 2 <
-          obj.mesh.position[this._hitAxis.axis] + obj._orientationScaling[this._hitAxis.axis] / 2
+        newPosition[this._hitAxis.axis] -
+          this._orientationScaling[this._hitAxis.axis] / 2 <
+          obj.mesh.position[this._hitAxis.axis] +
+            obj._orientationScaling[this._hitAxis.axis] / 2
       ) {
         console.log(this._hitAxis.axis + " neg");
         this.mesh.position[this._hitAxis.axis] =
@@ -275,7 +273,14 @@ export class GameObject {
   }
 
   public onCollide(newPosition: Vector3, obj: GameObject): void {
-    this.updateObjectOnAxis(newPosition, obj);
+    let yCurrentObj: number =
+      this.mesh.position.y - this._orientationScaling.y / 2;
+    let yHittedObj: number =
+      obj.mesh.position.y - obj._orientationScaling.y / 2;
+
+    if (yCurrentObj == yHittedObj) {
+      this.updateObjectOnAxis(newPosition, obj);
+    }
   }
 }
 
