@@ -127,27 +127,42 @@ export default class Playground {
   }
 
   private updatePosition(position: Vector3): void {
-  //   for (let axis of ["x","z"]) {
-  //     if (
-  //       (this._currentObject.hitAxis[axis] > 0 &&
-  //         position[axis] + this._currentObject._orientationScaling[axis] / 2 <
-  //           this._currentObject.mesh.position[axis] -
-  //             this._currentObject._orientationScaling[axis] / 2) ||
-  //       (this._currentObject.hitAxis[axis] < 0 &&
-  //         position[axis] - this._currentObject._orientationScaling[axis] / 2 >
-  //           this._currentObject.mesh.position[axis] +
-  //             this._currentObject._orientationScaling[axis] / 2)
-  //     ) {
-  //       this._currentObject.hitAxis[axis] = 0;
-  //     }
+    //   for (let axis of ["x","z"]) {
+    //     if (
+    //       (this._currentObject.hitAxis[axis] > 0 &&
+    //         position[axis] + this._currentObject._orientationScaling[axis] / 2 <
+    //           this._currentObject.mesh.position[axis] -
+    //             this._currentObject._orientationScaling[axis] / 2) ||
+    //       (this._currentObject.hitAxis[axis] < 0 &&
+    //         position[axis] - this._currentObject._orientationScaling[axis] / 2 >
+    //           this._currentObject.mesh.position[axis] +
+    //             this._currentObject._orientationScaling[axis] / 2)
+    //     ) {
+    //       this._currentObject.hitAxis[axis] = 0;
+    //     }
 
-  //     if (this._currentObject.hitAxis[axis] == 0) {
-  //       this._currentObject.mesh.position[axis] = position[axis];
-  //   }
-  // }
+    //     if (this._currentObject.hitAxis[axis] == 0) {
+    //       this._currentObject.mesh.position[axis] = position[axis];
+    //   }
+    // }
 
-    this._currentObject.mesh.position.x = position.x;
-    this._currentObject.mesh.position.z = position.z;
+    for (let axis of ["x", "z"]) {
+        if (
+          (this._currentObject.hitAxis.direction > 0 &&
+            position[axis] + this._currentObject._orientationScaling[axis] / 2 <
+              this._currentObject.mesh.position[axis] -
+                this._currentObject._orientationScaling[axis] / 2) ||
+          (this._currentObject.hitAxis.direction < 0 &&
+            position[axis] - this._currentObject._orientationScaling[axis] / 2 >
+              this._currentObject.mesh.position[axis] +
+                this._currentObject._orientationScaling[axis] / 2)
+        ) {
+          this._currentObject.hitAxis.direction = 0;
+      }
+
+      if (this._currentObject.hitAxis.axis != axis || this._currentObject.hitAxis.direction == 0)
+        this._currentObject.mesh.position[axis] = position[axis];
+    }
   }
 
   public createScene(
