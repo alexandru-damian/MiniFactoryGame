@@ -177,6 +177,7 @@ export class GameObject {
   }
 
   private updateObjectOnAxis(newPosition: Vector3, obj: GameObject): void {
+
     for (let axis of ["x", "z"]) {
       let direction: number = 0;
       if (
@@ -188,8 +189,6 @@ export class GameObject {
         direction = -1;
       }
 
-      // console.log("curr hitAxis " + this.hitAxis);
-      // console.log("temp Axis " + axis+ "direction:" + direction);
       this.updateClosestAxis(axis, direction, obj);
     }
 

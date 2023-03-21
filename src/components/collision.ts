@@ -1,4 +1,4 @@
-import { GameObject, Objects} from "./object";
+import { GameObject, Objects } from "./object";
 import { Vector3 } from "@babylonjs/core";
 
 export class Collision {
@@ -8,9 +8,9 @@ export class Collision {
     this._objects = objects;
   }
 
-  public collides(newPostion: Vector3,
-    currentObj: GameObject,
-  ): void {
+  public collides(newPostion: Vector3, currentObj: GameObject): void {
+    let hit: boolean = false;
+
     for (let [key, obj] of this._objects) {
       if (currentObj.mesh.id == String(key)) {
         continue;
@@ -18,12 +18,11 @@ export class Collision {
 
       if (currentObj.mesh.intersectsMesh(obj.mesh)) {
         currentObj.onCollide(newPostion, obj);
-        return;
+        hit = true;
       }
     }
-    currentObj.resetHitAxis();
+    if (!hit) {
+      currentObj.resetHitAxis();
+    }
   }
 }
-
-
-
