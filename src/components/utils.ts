@@ -21,3 +21,9 @@ export function sign(x: number): number {
 
   return sign;
 }
+
+export function calculateSizeDiff(objA: ObjProps, objB: ObjProps): number {
+  return Math.abs((objA[0] - objA[1] / 2 )- (objB[0] + objB[1] / 2));
+}
+
+export type ObjProps = [positionAxis: number, scaleAxis: number];

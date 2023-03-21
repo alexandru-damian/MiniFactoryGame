@@ -3,11 +3,15 @@ import { Vector3, Color3, Tools } from "@babylonjs/core/";
 import { HighlightLayer } from "@babylonjs/core";
 import { GameConfig } from "../config/gameConfig";
 import * as utils from "./utils";
-import { HitAxis } from "./collision";
 
 export enum Rotation {
   RLEFT = 0,
   RRIGHT,
+}
+
+export interface HitAxis {
+  axis: Axis;
+  direction: number;
 }
 
 export class GameObject {
@@ -25,7 +29,7 @@ export class GameObject {
 
   private crateEmptyObject() {
     this._empty = true;
-    this._hitAxis = new HitAxis();
+    this._hitAxis = { axis: "", direction: 0 };
     this._highlightLayer = new HighlightLayer("hl");
   }
 
@@ -77,6 +81,12 @@ export class GameObject {
   public offFocus() {
     this._highlightLayer.removeMesh(this._mesh);
     this._mesh.disableEdgesRendering();
+  }
+
+  public resetHitAxis():void
+  {
+    this._hitAxis.axis = "";
+    this._hitAxis.direction = 0;
   }
 
   public rotate(direction: Rotation) {
@@ -164,97 +174,103 @@ export class GameObject {
     this.setY(this._mesh.position.y);
 
     this._grabbed = false;
-    this.hitAxis.reset();
   }
 
   private updateObjectOnAxis(newPosition: Vector3, obj: GameObject): void {
-    let closestAxis: [axis: Axis, value: number] = [
-      "",
-      Number.POSITIVE_INFINITY,
-    ];
-
-    for (let axis of ["x"]) {
-      if (this._hitAxis[axis] == 0) {
-        if (
-          this.mesh.position[axis] + this._orientationScaling[axis] / 2 <
-          obj.mesh.position[axis] + obj._orientationScaling[axis] / 2
-        ) {
-          this._hitAxis[axis] = 1;
-        } else {
-          this._hitAxis[axis] = -1;
-        }
-        closestAxis = this.calculateClosestAxis(
-          axis,
-          this._hitAxis[axis],
-          closestAxis,
-          obj
-        );
+    for (let axis of ["x", "z"]) {
+      let direction: number = 0;
+      if (
+        this.mesh.position[axis] + this._orientationScaling[axis] / 2 <
+        obj.mesh.position[axis] + obj._orientationScaling[axis] / 2
+      ) {
+        direction = 1;
+      } else {
+        direction = -1;
       }
 
-      console.log("update for "+axis);
-      this.updateWallPointOnAxis(axis, newPosition, obj);
+      // console.log("curr hitAxis " + this.hitAxis);
+      // console.log("temp Axis " + axis+ "direction:" + direction);
+      this.updateClosestAxis(axis, direction, obj);
     }
 
-    if (closestAxis[0] == "") {
-      return;
-    }
-      console.log(closestAxis[0]);
-      this.updateWallPointOnAxis(closestAxis[0], newPosition, obj);
+    this.updateWallPointOnAxis(newPosition, obj);
   }
 
-  private calculateClosestAxis(
+  private updateClosestAxis(
     axis: Axis,
     direction: number,
-    axisVal: [axis: Axis, value: number],
     obj: GameObject
-  ): [Axis, number] {
-    let diff: number;
+  ): void {
+    let diffA: number = this.findCollidedSize(this._hitAxis, obj);
+    let diffB: number = this.findCollidedSize(
+      { axis: axis, direction: direction },
+      obj
+    );
 
-    if (direction > 0) {
-      diff = Math.abs(
-        this.mesh.position[axis] +
-          this._orientationScaling[axis] / 2 -
-          obj.mesh.position[axis] -
-          obj._orientationScaling[axis] / 2
-      );
-    } else {
-      diff = Math.abs(
-        this.mesh.position[axis] -
-          this._orientationScaling[axis] / 2 -
-          obj.mesh.position[axis] +
-          obj._orientationScaling[axis] / 2
-      );
+    // console.log("diffA "+ diffA);
+    // console.log("diffB "+ diffB);
+
+    if (diffB < diffA) {
+      this.hitAxis.axis = axis;
+      this._hitAxis.direction = direction;
+    }
+  }
+
+  private findCollidedSize(axisColided: HitAxis, obj: GameObject): number {
+    if(axisColided.axis == "")
+    {
+      return Number.POSITIVE_INFINITY;
     }
 
-    return diff < axisVal[1] ? [axis, diff] : axisVal;
+    if (axisColided.direction > 0) {
+      return utils.calculateSizeDiff(
+        [
+          obj.mesh.position[axisColided.axis],
+          obj._orientationScaling[axisColided.axis],
+        ],
+        [
+          this.mesh.position[axisColided.axis],
+          this._orientationScaling[axisColided.axis],
+        ]
+      );
+    }
+    return utils.calculateSizeDiff(
+      [
+        this.mesh.position[axisColided.axis],
+        this._orientationScaling[axisColided.axis],
+      ],
+      [
+        obj.mesh.position[axisColided.axis],
+        obj._orientationScaling[axisColided.axis],
+      ]
+    );
   }
 
   private updateWallPointOnAxis(
-    axis: Axis,
     newPosition: Vector3,
     obj: GameObject
   ): void {
-    if (this._hitAxis[axis] != 0) {
+    if (this._hitAxis.axis != "") {
       if (
-        this._hitAxis[axis] > 0 &&
-        newPosition[axis] + this._orientationScaling[axis] / 2 >
-          obj.mesh.position[axis] - obj._orientationScaling[axis] / 2
+        this._hitAxis.direction > 0 &&
+        newPosition[this._hitAxis.axis] + this._orientationScaling[this._hitAxis.axis] / 2 >
+          obj.mesh.position[this._hitAxis.axis] - obj._orientationScaling[this._hitAxis.axis] / 2
       ) {
-        console.log(axis + " pos");
-        this.mesh.position[axis] =
-          obj.mesh.position[axis] -
-          obj._orientationScaling[axis] / 2 -
-          this._orientationScaling[axis] / 2;
+        console.log(this._hitAxis.axis + " pos");
+        this.mesh.position[this._hitAxis.axis] =
+          obj.mesh.position[this._hitAxis.axis] -
+          obj._orientationScaling[this._hitAxis.axis] / 2 -
+          this._orientationScaling[this._hitAxis.axis] / 2;
       } else if (
-        this._hitAxis[axis] < 0 &&
-        newPosition[axis] - this._orientationScaling[axis] / 2 <
-          obj.mesh.position[axis] + obj._orientationScaling[axis] / 2
+        this._hitAxis.direction < 0 &&
+        newPosition[this._hitAxis.axis] - this._orientationScaling[this._hitAxis.axis] / 2 <
+          obj.mesh.position[this._hitAxis.axis] + obj._orientationScaling[this._hitAxis.axis] / 2
       ) {
-        console.log(axis + " neg");
-        this.mesh.position[axis] =
-          obj.mesh.position[axis] +
-          obj._orientationScaling[axis] / 2 +
-          this._orientationScaling[axis] / 2;
+        console.log(this._hitAxis.axis + " neg");
+        this.mesh.position[this._hitAxis.axis] =
+          obj.mesh.position[this._hitAxis.axis] +
+          obj._orientationScaling[this._hitAxis.axis] / 2 +
+          this._orientationScaling[this._hitAxis.axis] / 2;
       }
     }
   }
@@ -265,4 +281,5 @@ export class GameObject {
 }
 
 type Axis = string;
+
 export type Objects = Map<number, GameObject>;

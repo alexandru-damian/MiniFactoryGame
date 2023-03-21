@@ -1,25 +1,6 @@
 import { GameObject, Objects} from "./object";
 import { Vector3 } from "@babylonjs/core";
 
-export class HitAxis
-{
-  
-  public x:number;
-  public z:number;
-
-  constructor()
-  {
-    this.reset();
-  }
-
-  reset()
-  {
-    console.log("Reset");
-    this.x= 0;
-    this.z= 0;
-  }
-}
-
 export class Collision {
   private _objects: Objects;
 
@@ -40,7 +21,7 @@ export class Collision {
         return;
       }
     }
-    currentObj.hitAxis.reset();
+    currentObj.resetHitAxis();
   }
 }
 
