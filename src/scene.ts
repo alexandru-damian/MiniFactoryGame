@@ -127,22 +127,7 @@ export default class Playground {
   }
 
   private updatePosition(position: Vector3): void {
-
     for (let axis of ["x", "z"]) {
-        if (
-          (this._currentObject.hitAxis.direction > 0 &&
-            position[axis] + this._currentObject._orientationScaling[axis] / 2 <
-              this._currentObject.mesh.position[axis] -
-                this._currentObject._orientationScaling[axis] / 2) ||
-          (this._currentObject.hitAxis.direction < 0 &&
-            position[axis] - this._currentObject._orientationScaling[axis] / 2 >
-              this._currentObject.mesh.position[axis] +
-                this._currentObject._orientationScaling[axis] / 2)
-        ) {
-          this._currentObject.hitAxis.direction = 0;
-      }
-
-      if (this._currentObject.hitAxis.axis != axis || this._currentObject.hitAxis.direction == 0)
         this._currentObject.mesh.position[axis] = position[axis];
     }
   }
@@ -285,8 +270,8 @@ export default class Playground {
         return;
       }
 
-      this.updatePosition(newPos);
       this._collisions.collides(newPos, this._currentObject);
+      this.updatePosition(newPos);
     };
 
     window.addEventListener(

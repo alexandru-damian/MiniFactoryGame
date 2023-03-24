@@ -178,18 +178,28 @@ export class GameObject {
   private updateObjectOnAxis(newPosition: Vector3, obj: GameObject): void {
     for (let axis of ["x", "z"]) {
       let direction: number = 0;
-      if (
-        this.mesh.position[axis] + this._orientationScaling[axis] / 2 <
-        obj.mesh.position[axis] + obj._orientationScaling[axis] / 2
+
+      if (this.hitAxis.axis != axis) {
+        if (this.mesh.position[axis] < newPosition[axis]) {
+          direction = 1;
+        } else if (this.mesh.position[axis] > newPosition[axis]) {
+          direction = -1;
+        }
+      } else if (
+        (this.hitAxis.direction > 0 &&
+          newPosition[axis] < this.mesh.position[axis]) ||
+        (this.hitAxis.direction < 0 &&
+          newPosition[axis] > this.mesh.position[axis])
       ) {
-        direction = 1;
-      } else {
-        direction = -1;
+        this.mesh.position[axis] = newPosition[axis];
+        return;
       }
 
       this.updateClosestAxis(axis, direction, obj);
     }
 
+    console.log("Obj name: " + obj.mesh.name);
+    console.log(this.hitAxis);
     this.updateWallPointOnAxis(newPosition, obj);
   }
 
@@ -203,9 +213,6 @@ export class GameObject {
       { axis: axis, direction: direction },
       obj
     );
-
-    // console.log("diffA "+ diffA);
-    // console.log("diffB "+ diffB);
 
     if (diffB < diffA) {
       this.hitAxis.axis = axis;
@@ -242,29 +249,39 @@ export class GameObject {
     );
   }
 
+  private isOutOfBounds(position: Vector3): boolean {
+    if (this.hitAxis.axis == "") {
+      return false;
+    }
+
+    return (
+      (this.hitAxis.direction > 0 &&
+        position[this._hitAxis.axis] +
+          this._orientationScaling[this._hitAxis.axis] / 2 <
+          this.mesh.position[this._hitAxis.axis] -
+            this._orientationScaling[this._hitAxis.axis] / 2) ||
+      (this.hitAxis.direction < 0 &&
+        position[this._hitAxis.axis] -
+          this._orientationScaling[this._hitAxis.axis] / 2 >
+          this.mesh.position[this._hitAxis.axis] +
+            this._orientationScaling[this._hitAxis.axis] / 2)
+    );
+  }
+
   private updateWallPointOnAxis(newPosition: Vector3, obj: GameObject): void {
     if (this._hitAxis.axis != "") {
       if (
         this._hitAxis.direction > 0 &&
-        newPosition[this._hitAxis.axis] +
-          this._orientationScaling[this._hitAxis.axis] / 2 >
-          obj.mesh.position[this._hitAxis.axis] -
-            obj._orientationScaling[this._hitAxis.axis] / 2
+        this.mesh.position[this._hitAxis.axis]
       ) {
         console.log(this._hitAxis.axis + " pos");
-        this.mesh.position[this._hitAxis.axis] =
+        newPosition[this._hitAxis.axis] =
           obj.mesh.position[this._hitAxis.axis] -
           obj._orientationScaling[this._hitAxis.axis] / 2 -
           this._orientationScaling[this._hitAxis.axis] / 2;
-      } else if (
-        this._hitAxis.direction < 0 &&
-        newPosition[this._hitAxis.axis] -
-          this._orientationScaling[this._hitAxis.axis] / 2 <
-          obj.mesh.position[this._hitAxis.axis] +
-            obj._orientationScaling[this._hitAxis.axis] / 2
-      ) {
+      } else if (this._hitAxis.direction < 0) {
         console.log(this._hitAxis.axis + " neg");
-        this.mesh.position[this._hitAxis.axis] =
+        newPosition[this._hitAxis.axis] =
           obj.mesh.position[this._hitAxis.axis] +
           obj._orientationScaling[this._hitAxis.axis] / 2 +
           this._orientationScaling[this._hitAxis.axis] / 2;
