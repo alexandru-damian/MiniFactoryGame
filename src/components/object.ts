@@ -175,31 +175,35 @@ export class GameObject {
     this._grabbed = false;
   }
 
+  private isOutOfBounds(newPosition: Vector3): boolean {
+    return (
+      (this.hitAxis.direction > 0 &&
+        newPosition[this._hitAxis.axis] <
+          this.mesh.position[this._hitAxis.axis]) ||
+      (this.hitAxis.direction < 0 &&
+        newPosition[this._hitAxis.axis] >
+          this.mesh.position[this._hitAxis.axis])
+    );
+  }
+
+  private calculateDirection(axis:Axis,axisValue: number): number {
+    if (this.mesh.position[axis] < axisValue) {
+      return 1;
+    }
+    return -1;
+  }
+
   private updateObjectOnAxis(newPosition: Vector3, obj: GameObject): void {
     for (let axis of ["x", "z"]) {
       let direction: number = 0;
 
-      if (this.hitAxis.axis != axis) {
-        if (this.mesh.position[axis] < newPosition[axis]) {
-          direction = 1;
-        } else if (this.mesh.position[axis] > newPosition[axis]) {
-          direction = -1;
-        }
-      } else if (
-        (this.hitAxis.direction > 0 &&
-          newPosition[axis] < this.mesh.position[axis]) ||
-        (this.hitAxis.direction < 0 &&
-          newPosition[axis] > this.mesh.position[axis])
-      ) {
-        this.mesh.position[axis] = newPosition[axis];
-        return;
-      }
-
+      direction = this.calculateDirection(axis ,newPosition[axis]);
       this.updateClosestAxis(axis, direction, obj);
     }
 
     console.log("Obj name: " + obj.mesh.name);
-    console.log(this.hitAxis);
+    console.log(this.hitAxis.direction);
+
     this.updateWallPointOnAxis(newPosition, obj);
   }
 
@@ -246,25 +250,6 @@ export class GameObject {
         obj.mesh.position[axisColided.axis],
         obj._orientationScaling[axisColided.axis],
       ]
-    );
-  }
-
-  private isOutOfBounds(position: Vector3): boolean {
-    if (this.hitAxis.axis == "") {
-      return false;
-    }
-
-    return (
-      (this.hitAxis.direction > 0 &&
-        position[this._hitAxis.axis] +
-          this._orientationScaling[this._hitAxis.axis] / 2 <
-          this.mesh.position[this._hitAxis.axis] -
-            this._orientationScaling[this._hitAxis.axis] / 2) ||
-      (this.hitAxis.direction < 0 &&
-        position[this._hitAxis.axis] -
-          this._orientationScaling[this._hitAxis.axis] / 2 >
-          this.mesh.position[this._hitAxis.axis] +
-            this._orientationScaling[this._hitAxis.axis] / 2)
     );
   }
 
