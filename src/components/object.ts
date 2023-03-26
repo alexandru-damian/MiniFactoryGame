@@ -186,7 +186,7 @@ export class GameObject {
     );
   }
 
-  private calculateDirection(axis:Axis,axisValue: number): number {
+  private calculateDirection(axis: Axis, axisValue: number): number {
     if (this.mesh.position[axis] < axisValue) {
       return 1;
     }
@@ -197,8 +197,16 @@ export class GameObject {
     for (let axis of ["x", "z"]) {
       let direction: number = 0;
 
-      direction = this.calculateDirection(axis ,newPosition[axis]);
-      this.updateClosestAxis(axis, direction, obj);
+      if (this.hitAxis.axis != axis) {
+        direction = this.calculateDirection(axis, newPosition[axis]);
+        this.updateClosestAxis(axis, direction, obj);
+      }
+    }
+
+    if(this.isOutOfBounds(newPosition))
+    {
+      this.hitAxis.direction = 0;
+      return;
     }
 
     console.log("Obj name: " + obj.mesh.name);
@@ -255,16 +263,13 @@ export class GameObject {
 
   private updateWallPointOnAxis(newPosition: Vector3, obj: GameObject): void {
     if (this._hitAxis.axis != "") {
-      if (
-        this._hitAxis.direction > 0 &&
-        this.mesh.position[this._hitAxis.axis]
-      ) {
+      if (this._hitAxis.direction > 0) {
         console.log(this._hitAxis.axis + " pos");
         newPosition[this._hitAxis.axis] =
           obj.mesh.position[this._hitAxis.axis] -
           obj._orientationScaling[this._hitAxis.axis] / 2 -
           this._orientationScaling[this._hitAxis.axis] / 2;
-      } else if (this._hitAxis.direction < 0) {
+      } else {
         console.log(this._hitAxis.axis + " neg");
         newPosition[this._hitAxis.axis] =
           obj.mesh.position[this._hitAxis.axis] +
