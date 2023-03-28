@@ -126,7 +126,7 @@ export default class Playground {
     }
   }
 
-  private updatePosition(position: Vector3): void {
+  private updatePosition(position: Vector3): void {    
     for (let axis of ["x", "z"]) {
         this._currentObject.mesh.position[axis] = position[axis];
     }
@@ -170,6 +170,7 @@ export default class Playground {
       "#FFD100",
       "#43FF00",
       "#57D100",
+      "#FFD100",
     ];
     let coords: Array<BABYLON.Vector3> = new Array();
     let scales: Array<BABYLON.Vector3> = new Array();
@@ -182,6 +183,7 @@ export default class Playground {
     coords.push(new BABYLON.Vector3(-10, 0, 4));
     coords.push(new BABYLON.Vector3(-6, 0, 8));
     coords.push(new BABYLON.Vector3(-3, 0, 8));
+    coords.push(new BABYLON.Vector3(8, 0, 5));
 
     scales.push(new BABYLON.Vector3(1, 1, 1));
     scales.push(new BABYLON.Vector3(1, 2, 1));
@@ -191,6 +193,7 @@ export default class Playground {
     scales.push(new BABYLON.Vector3(2, 1, 2));
     scales.push(new BABYLON.Vector3(2, 2, 1));
     scales.push(new BABYLON.Vector3(3, 3, 3));
+    scales.push(new BABYLON.Vector3(3, 1, 1));
 
     let ground = this.createPlane();
     this.createTestMeshes(colors.length, colors, coords, scales);

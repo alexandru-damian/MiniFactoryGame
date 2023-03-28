@@ -9,7 +9,7 @@ export class Collision {
   }
 
   public collides(newPostion: Vector3, currentObj: GameObject): void {
-    let hit: boolean = false;
+    let hit:boolean = false;
 
     for (let [key, obj] of this._objects) {
       if (currentObj.mesh.id == String(key)) {
@@ -21,8 +21,8 @@ export class Collision {
         hit = true;
       }
     }
-    if (!hit) {
-      currentObj.resetHitAxis();
+      if(!hit){
+      currentObj.resetHitAxes();
     }
   }
 }
