@@ -1,5 +1,5 @@
 import { GameObject, Objects } from "./object";
-import { Vector3 } from "@babylonjs/core";
+import { Mesh, Vector3 } from "@babylonjs/core";
 
 export class Collision {
   private _objects: Objects;
@@ -8,21 +8,35 @@ export class Collision {
     this._objects = objects;
   }
 
+  private getUpdatedMesh(postion:Vector3, currentObj:GameObject):Mesh
+  {
+    let updatedMesh:Mesh = currentObj.mesh.clone("current");
+    updatedMesh.visibility = 0;
+    updatedMesh.position = postion.clone();
+    updatedMesh.computeWorldMatrix();
+
+    return updatedMesh;
+  }
+
   public collides(newPostion: Vector3, currentObj: GameObject): void {
     let hit:boolean = false;
+    let updatedMesh:Mesh = this.getUpdatedMesh(newPostion, currentObj);
+    
 
     for (let [key, obj] of this._objects) {
       if (currentObj.mesh.id == String(key)) {
         continue;
       }
 
-      if (currentObj.mesh.intersectsMesh(obj.mesh)) {
+      if (updatedMesh.intersectsMesh(obj.mesh)) {
         currentObj.onCollide(newPostion, obj);
         hit = true;
       }
     }
-      if(!hit){
+    if (!hit) {
       currentObj.resetHitAxes();
     }
+
+    updatedMesh.dispose();
   }
 }
