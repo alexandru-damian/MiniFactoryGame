@@ -242,7 +242,6 @@ export class GameObject {
       axis: axis,
       direction: direction,
       value: 0,
-      obj: new GameObject(),
     };
 
     let diffA: number = updatedAxis.value;
