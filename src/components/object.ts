@@ -1,4 +1,4 @@
-import { Immutable, Mesh, Nullable, Vector2 } from "@babylonjs/core";
+import { Mesh} from "@babylonjs/core";
 import { Vector3, Color3, Tools } from "@babylonjs/core/";
 import { HighlightLayer } from "@babylonjs/core";
 import { GameConfig } from "../config/gameConfig";

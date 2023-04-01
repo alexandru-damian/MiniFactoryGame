@@ -1,5 +1,5 @@
 import { GameObject, Objects } from "./object";
-import { Immutable, Mesh, Vector3 } from "@babylonjs/core";
+import { Mesh, Vector3 } from "@babylonjs/core";
 
 export class Collision {
   private _objects: Objects;
