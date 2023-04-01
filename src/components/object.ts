@@ -1,4 +1,4 @@
-import { Mesh, Vector2 } from "@babylonjs/core";
+import { Immutable, Mesh, Nullable, Vector2 } from "@babylonjs/core";
 import { Vector3, Color3, Tools } from "@babylonjs/core/";
 import { HighlightLayer } from "@babylonjs/core";
 import { GameConfig } from "../config/gameConfig";
@@ -9,17 +9,27 @@ export enum Rotation {
   RRIGHT,
 }
 
-interface HitAxis {
+export interface HitAxis {
   axis: Axis;
   direction: number;
   value: number;
+  obj?: GameObject;
 }
 
 export class GameObject {
   private _mesh: Mesh;
   public _orientationScaling: Vector3;
-  private _hitAxes: Map<Axis, number>;
+  private _hitAxes: Map<Axis, HitAxis>;
+  private _hitObjs: Array<GameObject>;
+
   private readonly AXES: Axis[] = ["x", "z"];
+  private readonly DEFAULT_HIT_AXIS: HitAxis = {
+    axis: "",
+    direction: 0,
+    value: Number.POSITIVE_INFINITY,
+  };
+
+  private _currentHitAxis: HitAxis;
 
   private _empty: boolean;
   private _highlightLayer: HighlightLayer;
@@ -32,11 +42,21 @@ export class GameObject {
   private crateEmptyObject() {
     this._empty = true;
     this._highlightLayer = new HighlightLayer("hl");
-    this._hitAxes = new Map<Axis, number>();
+    this._hitAxes = new Map<Axis, HitAxis>();
+    this._hitObjs = new Array();
+    this._currentHitAxis = this.DEFAULT_HIT_AXIS;
+  }
+
+  public set hitObjs(objs: Array<GameObject>) {
+    this._hitObjs = objs;
   }
 
   public get mesh() {
     return this._mesh;
+  }
+
+  public get currentHitAxis() {
+    return this._currentHitAxis;
   }
 
   public get hitAxes() {
@@ -87,6 +107,8 @@ export class GameObject {
 
   public resetHitAxes(): void {
     this._hitAxes.clear();
+    this._hitObjs = new Array();
+    this._currentHitAxis = this.DEFAULT_HIT_AXIS;
   }
 
   public rotate(direction: Rotation) {
@@ -190,7 +212,7 @@ export class GameObject {
   }
 
   private updateObjectOnAxis(newPosition: Vector3, obj: GameObject): void {
-    let updatedAxis: HitAxis = { axis: "", direction: 0, value: Number.POSITIVE_INFINITY };
+    let updatedAxis: HitAxis = this.DEFAULT_HIT_AXIS;
     let direction: number;
 
     for (let axis of this.AXES) {
@@ -198,16 +220,16 @@ export class GameObject {
         this.mesh.position[axis],
         newPosition[axis]
       );
-      updatedAxis = this.updateClosestAxis(updatedAxis, axis, direction, obj);
-      console.log(updatedAxis);
+      if (direction != 0) {
+        updatedAxis = this.updateClosestAxis(updatedAxis, axis, direction, obj);
+      }
     }
 
     console.log(updatedAxis);
 
     if (updatedAxis.axis != "" && updatedAxis.direction != 0) {
-      this._hitAxes.set(updatedAxis.axis, updatedAxis.direction);
+      this._hitAxes.set(updatedAxis.axis, updatedAxis);
     }
-    this.updateWallPointOnAxis(newPosition, obj);
   }
 
   private updateClosestAxis(
@@ -216,13 +238,19 @@ export class GameObject {
     direction: number,
     obj: GameObject
   ): HitAxis {
-    let newHittedAxis: HitAxis = { axis: axis, direction: direction, value: 0 };
+    let newHittedAxis: HitAxis = {
+      axis: axis,
+      direction: direction,
+      value: 0,
+      obj: new GameObject(),
+    };
 
     let diffA: number = updatedAxis.value;
     let diffB: number = this.findCollidedSize(newHittedAxis, obj);
 
     if (diffB < diffA) {
       newHittedAxis.value = diffB;
+      newHittedAxis.obj = obj;
       return newHittedAxis;
     }
     return updatedAxis;
@@ -257,49 +285,39 @@ export class GameObject {
     );
   }
 
-  private updateWallPointOnAxis(
-    newPosition: Vector3,
-    obj: GameObject
-  ): void {
-    let currentHitAxis: HitAxis = { axis: "", direction: 0, value: Number.POSITIVE_INFINITY };
-    for (let hitAxis of this._hitAxes) {
-      currentHitAxis = this.updateClosestAxis(
-        currentHitAxis,
-        hitAxis[0],
-        hitAxis[1],
-        obj
+  private updatePointOnAxis(hitAxis: HitAxis): number {
+    if (hitAxis.direction > 0) {
+      return (
+        hitAxis.obj?.mesh.position[hitAxis.axis] -
+        hitAxis.obj?._orientationScaling[hitAxis.axis] / 2 -
+        this._orientationScaling[hitAxis.axis] / 2
       );
     }
 
-    if (currentHitAxis.direction == 0) {
-      return;
-    }
+    return (
+      hitAxis.obj?.mesh.position[hitAxis.axis] +
+      hitAxis.obj?._orientationScaling[hitAxis.axis] / 2 +
+      this._orientationScaling[hitAxis.axis] / 2
+    );
+  }
 
-    if (
-      currentHitAxis.direction > 0
-    ) {
-      newPosition[currentHitAxis.axis] =
-        obj.mesh.position[currentHitAxis.axis] -
-        obj._orientationScaling[currentHitAxis.axis] / 2 -
-        this._orientationScaling[currentHitAxis.axis] / 2;
-    } else 
-      {
-      newPosition[currentHitAxis.axis] =
-        obj.mesh.position[currentHitAxis.axis] +
-        obj._orientationScaling[currentHitAxis.axis] / 2 +
-        this._orientationScaling[currentHitAxis.axis] / 2;
+  private updateWallPointOnAxis(newPosition: Vector3): void {
+    for (let hitAxis of this.hitAxes) {
+      if (hitAxis[1].obj) {
+        newPosition[hitAxis[1].axis] = this.updatePointOnAxis(hitAxis[1]);
+      }
     }
   }
 
-  public onCollide(newPosition: Vector3, obj: GameObject): void {
-    let yCurrentObj: number =
-      this.mesh.position.y - this._orientationScaling.y / 2;
-    let yHittedObj: number =
-      obj.mesh.position.y - obj._orientationScaling.y / 2;
-
-    if (yCurrentObj == yHittedObj) {
+  private calculateClosestDirections(newPosition: Vector3): void {
+    for (let obj of this._hitObjs) {
       this.updateObjectOnAxis(newPosition, obj);
     }
+  }
+
+  public onCollide(newPosition: Vector3): void {
+    this.calculateClosestDirections(newPosition);
+    this.updateWallPointOnAxis(newPosition);
   }
 }
 

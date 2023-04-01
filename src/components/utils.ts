@@ -30,6 +30,10 @@ export function calculateDirection(
   previousPos: number,
   newPosition: number
 ): number {
+  if (previousPos == newPosition) {
+    return 0;
+  }
+
   if (previousPos < newPosition) {
     return 1;
   }
