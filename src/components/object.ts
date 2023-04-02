@@ -13,14 +13,12 @@ export interface HitAxis {
   axis: Axis;
   direction: number;
   value: number;
-  obj?: GameObject;
 }
 
 export class GameObject {
   private _mesh: Mesh;
   public _orientationScaling: Vector3;
-  private _hitAxes: Map<Axis, HitAxis>;
-  private _hitObjs: Array<GameObject>;
+  private _hitAxisObjs: Map<GameObject, HitAxis>;
 
   private readonly AXES: Axis[] = ["x", "z"];
   private readonly DEFAULT_HIT_AXIS: HitAxis = {
@@ -29,38 +27,31 @@ export class GameObject {
     value: Number.POSITIVE_INFINITY,
   };
 
-  private _currentHitAxis: HitAxis;
-
   private _empty: boolean;
   private _highlightLayer: HighlightLayer;
 
   private _grabbed: boolean;
-  constructor() {
-    this.crateEmptyObject();
-  }
 
   private crateEmptyObject() {
     this._empty = true;
     this._highlightLayer = new HighlightLayer("hl");
-    this._hitAxes = new Map<Axis, HitAxis>();
-    this._hitObjs = new Array();
-    this._currentHitAxis = this.DEFAULT_HIT_AXIS;
+    this._hitAxisObjs = new Map<GameObject, HitAxis>();
   }
 
-  public set hitObjs(objs: Array<GameObject>) {
-    this._hitObjs = objs;
+  constructor() {
+    this.crateEmptyObject();
+  }
+
+  public addObj(obj:GameObject) {
+    this._hitAxisObjs.set(obj, this.DEFAULT_HIT_AXIS);
   }
 
   public get mesh() {
     return this._mesh;
   }
 
-  public get currentHitAxis() {
-    return this._currentHitAxis;
-  }
-
-  public get hitAxes() {
-    return this._hitAxes;
+  public get hitAxisObjs() {
+    return this._hitAxisObjs;
   }
 
   public get grabbed(): boolean {
@@ -106,9 +97,7 @@ export class GameObject {
   }
 
   public resetHitAxes(): void {
-    this._hitAxes.clear();
-    this._hitObjs = new Array();
-    this._currentHitAxis = this.DEFAULT_HIT_AXIS;
+    this._hitAxisObjs.clear();
   }
 
   public rotate(direction: Rotation) {
@@ -211,7 +200,7 @@ export class GameObject {
     );
   }
 
-  private updateObjectOnAxis(newPosition: Vector3, obj: GameObject): void {
+  private calculateHitAxis(newPosition: Vector3, obj: GameObject): void {
     let updatedAxis: HitAxis = this.DEFAULT_HIT_AXIS;
     let direction: number;
 
@@ -228,7 +217,7 @@ export class GameObject {
     console.log(updatedAxis);
 
     if (updatedAxis.axis != "" && updatedAxis.direction != 0) {
-      this._hitAxes.set(updatedAxis.axis, updatedAxis);
+      this._hitAxisObjs.set(obj, updatedAxis);
     }
   }
 
@@ -249,7 +238,6 @@ export class GameObject {
 
     if (diffB < diffA) {
       newHittedAxis.value = diffB;
-      newHittedAxis.obj = obj;
       return newHittedAxis;
     }
     return updatedAxis;
@@ -284,33 +272,33 @@ export class GameObject {
     );
   }
 
-  private updatePointOnAxis(hitAxis: HitAxis): number {
+  private updatePointOnAxis(hitAxis: HitAxis,obj:GameObject): number {
     if (hitAxis.direction > 0) {
       return (
-        hitAxis.obj?.mesh.position[hitAxis.axis] -
-        hitAxis.obj?._orientationScaling[hitAxis.axis] / 2 -
+        obj.mesh.position[hitAxis.axis] -
+        obj._orientationScaling[hitAxis.axis] / 2 -
         this._orientationScaling[hitAxis.axis] / 2
       );
     }
 
     return (
-      hitAxis.obj?.mesh.position[hitAxis.axis] +
-      hitAxis.obj?._orientationScaling[hitAxis.axis] / 2 +
+      obj.mesh.position[hitAxis.axis] +
+      obj._orientationScaling[hitAxis.axis] / 2 +
       this._orientationScaling[hitAxis.axis] / 2
     );
   }
 
   private updateWallPointOnAxis(newPosition: Vector3): void {
-    for (let hitAxis of this.hitAxes) {
-      if (hitAxis[1].obj) {
-        newPosition[hitAxis[1].axis] = this.updatePointOnAxis(hitAxis[1]);
+    for (let hitAxisObj of this._hitAxisObjs) {
+      if (hitAxisObj[1].direction != 0) {
+        newPosition[hitAxisObj[1].axis] = this.updatePointOnAxis(hitAxisObj[1],hitAxisObj[0]);
       }
     }
   }
 
   private calculateClosestDirections(newPosition: Vector3): void {
-    for (let obj of this._hitObjs) {
-      this.updateObjectOnAxis(newPosition, obj);
+    for (let hitAxisObj of this._hitAxisObjs) {
+      this.calculateHitAxis(newPosition, hitAxisObj[0]);
     }
   }
 

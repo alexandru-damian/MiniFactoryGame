@@ -268,6 +268,7 @@ export default class Playground {
       }
 
       let newPos = getGroundPosition() as BABYLON.Vector3;
+      newPos.y = this._currentObject.mesh.position.y;
 
       if (!newPos) {
         return;
