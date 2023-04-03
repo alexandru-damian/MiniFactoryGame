@@ -1,4 +1,4 @@
-import { Mesh} from "@babylonjs/core";
+import { Mesh } from "@babylonjs/core";
 import { Vector3, Color3, Tools } from "@babylonjs/core/";
 import { HighlightLayer } from "@babylonjs/core";
 import { GameConfig } from "../config/gameConfig";
@@ -18,7 +18,7 @@ export interface HitAxis {
 export class GameObject {
   private _mesh: Mesh;
   public _orientationScaling: Vector3;
-  private _hitAxisObjs: Map<GameObject, HitAxis>;
+  private _hitAxisObjs: HitAxisObjs;
 
   private readonly AXES: Axis[] = ["x", "z"];
   private readonly DEFAULT_HIT_AXIS: HitAxis = {
@@ -42,7 +42,7 @@ export class GameObject {
     this.crateEmptyObject();
   }
 
-  public addObj(obj:GameObject) {
+  public addObj(obj: GameObject) {
     this._hitAxisObjs.set(obj, this.DEFAULT_HIT_AXIS);
   }
 
@@ -94,10 +94,6 @@ export class GameObject {
   public offFocus() {
     this._highlightLayer.removeMesh(this._mesh);
     this._mesh.disableEdgesRendering();
-  }
-
-  public resetHitAxes(): void {
-    this._hitAxisObjs.clear();
   }
 
   public rotate(direction: Rotation) {
@@ -185,19 +181,7 @@ export class GameObject {
     this.setY(this._mesh.position.y);
 
     this._grabbed = false;
-    this.resetHitAxes();
-  }
-
-  private isOutOfBounds(
-    hitAxis: [Axis, number],
-    newPosition: Vector3
-  ): boolean {
-    return (
-      (hitAxis[1] > 0 &&
-        newPosition[hitAxis[0]] < this.mesh.position[hitAxis[0]]) ||
-      (hitAxis[1] < 0 &&
-        newPosition[hitAxis[0]] > this.mesh.position[hitAxis[0]])
-    );
+    this._hitAxisObjs.clear();
   }
 
   private calculateHitAxis(newPosition: Vector3, obj: GameObject): void {
@@ -272,7 +256,7 @@ export class GameObject {
     );
   }
 
-  private updatePointOnAxis(hitAxis: HitAxis,obj:GameObject): number {
+  private updatePointOnAxis(hitAxis: HitAxis, obj: GameObject): number {
     if (hitAxis.direction > 0) {
       return (
         obj.mesh.position[hitAxis.axis] -
@@ -291,7 +275,10 @@ export class GameObject {
   private updateWallPointOnAxis(newPosition: Vector3): void {
     for (let hitAxisObj of this._hitAxisObjs) {
       if (hitAxisObj[1].direction != 0) {
-        newPosition[hitAxisObj[1].axis] = this.updatePointOnAxis(hitAxisObj[1],hitAxisObj[0]);
+        newPosition[hitAxisObj[1].axis] = this.updatePointOnAxis(
+          hitAxisObj[1],
+          hitAxisObj[0]
+        );
       }
     }
   }
@@ -308,6 +295,7 @@ export class GameObject {
   }
 }
 
-type Axis = string;
+export type Axis = string;
 
+export type HitAxisObjs = Map<GameObject, HitAxis>;
 export type Objects = Map<number, GameObject>;

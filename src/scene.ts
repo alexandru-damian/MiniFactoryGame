@@ -274,7 +274,7 @@ export default class Playground {
         return;
       }
 
-      this._collisions.collides(newPos, this._currentObject);
+      this._collisions.calculateCollisions(newPos, this._currentObject);
       this.updatePosition(newPos);
     };
 
