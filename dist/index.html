@@ -14,23 +14,22 @@
       }
 
       #canvas {
+        position: absolute;
         width: 100%;
         height: 100%;
-        display: block;
         font-size: 0;
-        position: absolute;
         z-index: 1;
       }
 
       #appText
       {
-        z-index: 5;
+        position: absolute;
+        bottom: 3%;
+         text-align: center;
+        width: 100%;
+        z-index:4;
         font-size: 20px;
         font-family:Arial;
-        position: absolute;
-        transform-origin: center;
-        bottom: 3%;
-        right: 3%;
         color: white;
 
       }
@@ -40,7 +39,7 @@
   <body>
     <canvas id="canvas" touch-action="none"></canvas>
 
-    <div id="appText">Work in progress - Collision tests</div>
+    <div id="appText">Work in progress - Collision test</div>
     <script src="./scripts/app.js" type="module"></script>
   </body>
 </html>
