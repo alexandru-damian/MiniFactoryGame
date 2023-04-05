@@ -71,6 +71,10 @@ export class GameObject {
     }
   }
 
+  private multiplyScalar(scalar: number, vec: Vector3): Vector3 {
+    return vec.multiply(new Vector3(scalar, scalar, scalar));
+  }
+
   public cloneObjProperties(): GameObject {
     let newObj = new GameObject();
 
@@ -234,25 +238,13 @@ export class GameObject {
 
     if (axisColided.direction > 0) {
       return utils.calculateDeltaSize(
-        [
-          obj.mesh.position[axisColided.axis],
-          obj._orientationScaling[axisColided.axis],
-        ],
-        [
-          this.mesh.position[axisColided.axis],
-          this._orientationScaling[axisColided.axis],
-        ]
+        [obj.mesh.position[axisColided.axis], obj._orientationScaling[axisColided.axis]],
+        [this.mesh.position[axisColided.axis], this._orientationScaling[axisColided.axis]]
       );
     }
     return utils.calculateDeltaSize(
-      [
-        this.mesh.position[axisColided.axis],
-        this._orientationScaling[axisColided.axis],
-      ],
-      [
-        obj.mesh.position[axisColided.axis],
-        obj._orientationScaling[axisColided.axis],
-      ]
+      [this.mesh.position[axisColided.axis], this._orientationScaling[axisColided.axis]],
+      [obj.mesh.position[axisColided.axis], obj._orientationScaling[axisColided.axis]]
     );
   }
 

@@ -1,3 +1,5 @@
+import { float } from "@babylonjs/core";
+
 export function snapToGrid(
   axis: number,
   size: number,

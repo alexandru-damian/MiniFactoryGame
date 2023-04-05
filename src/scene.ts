@@ -61,6 +61,7 @@ export default class Playground {
       GameConfig._SIZE_GRID_CELL / 2
     );
     box.position.y = sizes.y / 2 - GameConfig._SIZE_GRID_CELL / 2;
+    box.setBoundingInfo(box.getBoundingInfo().scale(GameConfig._SCALE_BOX));
 
     const boxMat = new BABYLON.StandardMaterial("boxMat");
     boxMat.diffuseColor = BABYLON.Color3.FromHexString(color);
@@ -285,6 +286,8 @@ export default class Playground {
           return;
         }
 
+        let test = 0.01;
+
         switch (evt.code) {
           case "KeyQ": {
             this._currentObject.rotate(Rotation.RLEFT);
@@ -294,6 +297,46 @@ export default class Playground {
             this._currentObject.rotate(Rotation.RRIGHT);
             break;
           }
+          case "KeyD":
+            {
+      let newPos = this._currentObject.mesh.position.clone();
+      newPos.x +=test;
+
+      this._collisions.calculateCollisions(newPos, this._currentObject);
+      this.updatePosition(newPos);
+
+              break;
+            }
+            case "KeyA":
+            {
+      let newPos = this._currentObject.mesh.position.clone();
+      newPos.x -= test;
+
+      this._collisions.calculateCollisions(newPos, this._currentObject);
+      this.updatePosition(newPos);
+
+              break;
+            }
+            case "KeyW":
+            {
+      let newPos = this._currentObject.mesh.position.clone();
+      newPos.z += test;
+
+      this._collisions.calculateCollisions(newPos, this._currentObject);
+      this.updatePosition(newPos);
+
+              break;
+            }
+            case "KeyS":
+            {
+      let newPos = this._currentObject.mesh.position.clone();
+      newPos.z -= test;
+
+      this._collisions.calculateCollisions(newPos, this._currentObject);
+      this.updatePosition(newPos);
+
+              break;
+            }
           default: {
             break;
           }
