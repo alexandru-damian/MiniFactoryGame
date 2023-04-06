@@ -71,10 +71,6 @@ export class GameObject {
     }
   }
 
-  private multiplyScalar(scalar: number, vec: Vector3): Vector3 {
-    return vec.multiply(new Vector3(scalar, scalar, scalar));
-  }
-
   public cloneObjProperties(): GameObject {
     let newObj = new GameObject();
 
