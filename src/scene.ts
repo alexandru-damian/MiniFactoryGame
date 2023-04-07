@@ -275,7 +275,7 @@ export default class Playground {
         return;
       }
 
-      this._collisions.calculateCollisions(newPos, this._currentObject);
+      newPos = this._collisions.calculateCollisions(newPos, this._currentObject);
       this.updatePosition(newPos);
     };
 
@@ -322,7 +322,7 @@ export default class Playground {
       let newPos = this._currentObject.mesh.position.clone();
       newPos.z += test;
 
-      this._collisions.calculateCollisions(newPos, this._currentObject);
+      newPos =this._collisions.calculateCollisions(newPos, this._currentObject);
       this.updatePosition(newPos);
 
               break;

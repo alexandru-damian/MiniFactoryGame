@@ -18,7 +18,7 @@ export interface HitAxis {
 export class GameObject {
   private _mesh: Mesh;
   public _orientationScaling: Vector3;
-  private _hitAxisObjs: HitAxisObjs;
+  private _hitAxesObjs: HitAxisObjs;
 
   private readonly AXES: Axis[] = ["x", "z"];
   private readonly DEFAULT_HIT_AXIS: HitAxis = {
@@ -35,23 +35,23 @@ export class GameObject {
   private crateEmptyObject() {
     this._empty = true;
     this._highlightLayer = new HighlightLayer("hl");
-    this._hitAxisObjs = new Map<GameObject, HitAxis>();
+    this._hitAxesObjs = new Map<GameObject, HitAxis>();
   }
 
   constructor() {
     this.crateEmptyObject();
   }
 
-  public addObj(obj: GameObject) {
-    this._hitAxisObjs.set(obj, this.DEFAULT_HIT_AXIS);
+  public addHitAxis(key: GameObject, value: HitAxis): void {
+    this._hitAxesObjs.set(key, value);
   }
 
   public get mesh() {
     return this._mesh;
   }
 
-  public get hitAxisObjs() {
-    return this._hitAxisObjs;
+  public get hitAxesObjs() {
+    return this._hitAxesObjs;
   }
 
   public get grabbed(): boolean {
@@ -78,7 +78,6 @@ export class GameObject {
     newObj._mesh = this._mesh;
 
     newObj._orientationScaling = this._orientationScaling.clone();
-
     return newObj;
   }
 
@@ -181,11 +180,12 @@ export class GameObject {
     this.setY(this._mesh.position.y);
 
     this._grabbed = false;
-    this._hitAxisObjs.clear();
+    this._hitAxesObjs.clear();
   }
 
-  private calculateHitAxis(newPosition: Vector3, obj: GameObject): void {
-    let updatedAxis: HitAxis = this.DEFAULT_HIT_AXIS;
+  public calculateHitAxis(newPosition: Vector3, obj: GameObject): boolean {
+    let updatedAxis: HitAxis =
+      this.hitAxesObjs.get(obj) ?? this.DEFAULT_HIT_AXIS;
     let direction: number;
 
     for (let axis of this.AXES) {
@@ -198,11 +198,15 @@ export class GameObject {
       }
     }
 
+    console.log("Updating");
     console.log(updatedAxis);
 
     if (updatedAxis.axis != "" && updatedAxis.direction != 0) {
-      this._hitAxisObjs.set(obj, updatedAxis);
+      this.addHitAxis(obj, updatedAxis);
+      return true;
     }
+
+    return false;
   }
 
   private updateClosestAxis(
@@ -234,17 +238,29 @@ export class GameObject {
 
     if (axisColided.direction > 0) {
       return utils.calculateDeltaSize(
-        [obj.mesh.position[axisColided.axis], obj._orientationScaling[axisColided.axis]],
-        [this.mesh.position[axisColided.axis], this._orientationScaling[axisColided.axis]]
+        [
+          obj.mesh.position[axisColided.axis],
+          obj._orientationScaling[axisColided.axis],
+        ],
+        [
+          this.mesh.position[axisColided.axis],
+          this._orientationScaling[axisColided.axis],
+        ]
       );
     }
     return utils.calculateDeltaSize(
-      [this.mesh.position[axisColided.axis], this._orientationScaling[axisColided.axis]],
-      [obj.mesh.position[axisColided.axis], obj._orientationScaling[axisColided.axis]]
+      [
+        this.mesh.position[axisColided.axis],
+        this._orientationScaling[axisColided.axis],
+      ],
+      [
+        obj.mesh.position[axisColided.axis],
+        obj._orientationScaling[axisColided.axis],
+      ]
     );
   }
 
-  private updatePointOnAxis(hitAxis: HitAxis, obj: GameObject): number {
+  public calulateHitPointOnAxis(hitAxis: HitAxis, obj: GameObject): number {
     if (hitAxis.direction > 0) {
       return (
         obj.mesh.position[hitAxis.axis] -
@@ -260,25 +276,30 @@ export class GameObject {
     );
   }
 
+  public isOppositeDirectionColliding(
+    hitAxis: HitAxis,
+    newPosition: Vector3
+  ): boolean {
+    return (
+      (hitAxis.direction > 0 &&
+        newPosition[hitAxis.axis] > this.mesh.position[hitAxis.axis]) ||
+      (hitAxis.direction < 0 &&
+        newPosition[hitAxis.axis] < this.mesh.position[hitAxis.axis])
+    );
+  }
+
   private updateWallPointOnAxis(newPosition: Vector3): void {
-    for (let hitAxisObj of this._hitAxisObjs) {
+    for (let hitAxisObj of this._hitAxesObjs) {
       if (hitAxisObj[1].direction != 0) {
-        newPosition[hitAxisObj[1].axis] = this.updatePointOnAxis(
+        newPosition[hitAxisObj[1].axis] = Math.round(this.calulateHitPointOnAxis(
           hitAxisObj[1],
           hitAxisObj[0]
-        );
+        ));
       }
     }
   }
 
-  private calculateClosestDirections(newPosition: Vector3): void {
-    for (let hitAxisObj of this._hitAxisObjs) {
-      this.calculateHitAxis(newPosition, hitAxisObj[0]);
-    }
-  }
-
   public onCollide(newPosition: Vector3): void {
-    this.calculateClosestDirections(newPosition);
     this.updateWallPointOnAxis(newPosition);
   }
 }
