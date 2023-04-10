@@ -264,15 +264,15 @@ export class GameObject {
     if (hitAxis.direction > 0) {
       return (
         obj.mesh.position[hitAxis.axis] -
-        obj._orientationScaling[hitAxis.axis] / 2 -
-        this._orientationScaling[hitAxis.axis] / 2
+        (obj._orientationScaling[hitAxis.axis] * GameConfig._SCALE_BOX) / 2 -
+        (this._orientationScaling[hitAxis.axis] * GameConfig._SCALE_BOX) / 2
       );
     }
 
     return (
       obj.mesh.position[hitAxis.axis] +
-      obj._orientationScaling[hitAxis.axis] / 2 +
-      this._orientationScaling[hitAxis.axis] / 2
+      (obj._orientationScaling[hitAxis.axis] * GameConfig._SCALE_BOX) / 2 +
+      (this._orientationScaling[hitAxis.axis] * GameConfig._SCALE_BOX) / 2
     );
   }
 
@@ -291,10 +291,10 @@ export class GameObject {
   private updateWallPointOnAxis(newPosition: Vector3): void {
     for (let hitAxisObj of this._hitAxesObjs) {
       if (hitAxisObj[1].direction != 0) {
-        newPosition[hitAxisObj[1].axis] = Math.round(this.calulateHitPointOnAxis(
+        newPosition[hitAxisObj[1].axis] = this.calulateHitPointOnAxis(
           hitAxisObj[1],
           hitAxisObj[0]
-        ));
+        );
       }
     }
   }

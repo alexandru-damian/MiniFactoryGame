@@ -4,9 +4,8 @@ import { Mesh, Vector3 } from "@babylonjs/core";
 
 export class Collision {
   private readonly _objects: Objects;
-  private readonly PRECISION = 0.001;
   private readonly OFFSET: number =
-    GameConfig._SIZE_GRID_CELL - GameConfig._SCALE_BOX + this.PRECISION +this.PRECISION;
+    2*(GameConfig._SIZE_GRID_CELL - GameConfig._SCALE_BOX);
   constructor(objects: Objects) {
     this._objects = objects;
   }
@@ -34,7 +33,7 @@ export class Collision {
         currentObj.hitAxesObjs.delete(hitAxisObj[0]);
       } else {
         currentPosition[hitAxisObj[1].axis] =
-          currentObj.calulateHitPointOnAxis(hitAxisObj[1], hitAxisObj[0]);
+          currentObj.calulateHitPointOnAxis(hitAxisObj[1], hitAxisObj[0]) + hitAxisObj[1].direction * this.OFFSET;
       }
     }
 
@@ -66,8 +65,7 @@ export class Collision {
         currentObj.calculateHitAxis(currentPosition, obj);
       } else {
         if (hitAxes) {
-          console.log("huh??");
-          //currentObj.hitAxesObjs.delete(obj);
+          currentObj.hitAxesObjs.delete(obj);
         }
       }
     }
