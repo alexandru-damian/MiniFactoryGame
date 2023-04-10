@@ -297,46 +297,6 @@ export default class Playground {
             this._currentObject.rotate(Rotation.RRIGHT);
             break;
           }
-          case "KeyD":
-            {
-      let newPos = this._currentObject.mesh.position.clone();
-      newPos.x +=test;
-
-      this._collisions.calculateCollisions(newPos, this._currentObject);
-      this.updatePosition(newPos);
-
-              break;
-            }
-            case "KeyA":
-            {
-      let newPos = this._currentObject.mesh.position.clone();
-      newPos.x -= test;
-
-      this._collisions.calculateCollisions(newPos, this._currentObject);
-      this.updatePosition(newPos);
-
-              break;
-            }
-            case "KeyW":
-            {
-      let newPos = this._currentObject.mesh.position.clone();
-      newPos.z += test;
-
-      newPos =this._collisions.calculateCollisions(newPos, this._currentObject);
-      this.updatePosition(newPos);
-
-              break;
-            }
-            case "KeyS":
-            {
-      let newPos = this._currentObject.mesh.position.clone();
-      newPos.z -= test;
-
-      this._collisions.calculateCollisions(newPos, this._currentObject);
-      this.updatePosition(newPos);
-
-              break;
-            }
           default: {
             break;
           }
