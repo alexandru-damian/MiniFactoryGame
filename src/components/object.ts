@@ -9,10 +9,16 @@ export enum Rotation {
   RRIGHT,
 }
 
-export interface HitAxis {
+export class HitAxis {
   axis: Axis;
   direction: number;
   value: number;
+
+  constructor(_axis: Axis, _direction: number, _val: number) {
+    this.axis = _axis;
+    this.direction = _direction;
+    this.value = _val;
+  }
 }
 
 export class GameObject {
@@ -21,11 +27,11 @@ export class GameObject {
   private _hitAxesObjs: HitAxisObjs;
 
   private readonly AXES: Axis[] = ["x", "z"];
-  private readonly DEFAULT_HIT_AXIS: HitAxis = {
-    axis: "",
-    direction: 0,
-    value: Number.POSITIVE_INFINITY,
-  };
+  private readonly DEFAULT_HIT_AXIS: HitAxis = new HitAxis(
+    "",
+    0,
+    Number.POSITIVE_INFINITY
+  );
 
   private _empty: boolean;
   private _highlightLayer: HighlightLayer;
@@ -148,12 +154,12 @@ export class GameObject {
     }
   }
 
-  public calculateSnapOnAxis(axis:Axis,x: number, offset: number = GameConfig._SIZE_GRID_CELL):number {
-    return utils.snapToGrid(
-      x,
-      this._orientationScaling[axis],
-      offset / 2
-    );
+  public calculateSnapOnAxis(
+    axis: Axis,
+    x: number,
+    offset: number = GameConfig._SIZE_GRID_CELL
+  ): number {
+    return utils.snapToGrid(x, this._orientationScaling[axis], offset / 2);
   }
 
   public setX(x: number, offset: number = GameConfig._SIZE_GRID_CELL) {
@@ -223,11 +229,7 @@ export class GameObject {
     direction: number,
     obj: GameObject
   ): HitAxis {
-    let newHittedAxis: HitAxis = {
-      axis: axis,
-      direction: direction,
-      value: 0,
-    };
+    let newHittedAxis: HitAxis = new HitAxis(axis, direction, 0);
 
     let diffA: number = updatedAxis.value;
     let diffB: number = this.findCollidedSize(newHittedAxis, obj);
@@ -304,7 +306,10 @@ export class GameObject {
           hitAxisObj[0]
         );
       }
-      newPosition[hitAxisObj[1].axis] = this.calculateSnapOnAxis(hitAxisObj[1].axis, newPosition[hitAxisObj[1].axis]);
+      newPosition[hitAxisObj[1].axis] = this.calculateSnapOnAxis(
+        hitAxisObj[1].axis,
+        newPosition[hitAxisObj[1].axis]
+      );
     }
   }
 
