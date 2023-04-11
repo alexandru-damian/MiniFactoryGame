@@ -148,6 +148,14 @@ export class GameObject {
     }
   }
 
+  public calculateSnapOnAxis(axis:Axis,x: number, offset: number = GameConfig._SIZE_GRID_CELL):number {
+    return utils.snapToGrid(
+      x,
+      this._orientationScaling[axis],
+      offset / 2
+    );
+  }
+
   public setX(x: number, offset: number = GameConfig._SIZE_GRID_CELL) {
     this._mesh.position.x = utils.snapToGrid(
       x,
@@ -296,6 +304,7 @@ export class GameObject {
           hitAxisObj[0]
         );
       }
+      newPosition[hitAxisObj[1].axis] = this.calculateSnapOnAxis(hitAxisObj[1].axis, newPosition[hitAxisObj[1].axis]);
     }
   }
 
